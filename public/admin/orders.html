@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Orders & POS Processing - FelliRo Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <link rel="icon" href="/images/logo.png" type="image/png">
+  <link rel="stylesheet" href="/css/main.css?v=20260802_orders">
+</head>
+
+<body class="hz-body">
+
+  <div class="hz-layout" id="admin-orders-view">
+    <!-- Horizon Sidebar -->
+    <aside class="hz-sidebar">
+      <div class="hz-sidebar-brand">
+        <img src="/images/logo.png" alt="FelliRo" style="height: 32px; max-width: 145px; object-fit: contain;">
+        <span class="hz-sidebar-brand-badge">ADMIN</span>
+      </div>
+
+      <ul class="hz-sidebar-nav">
+        <li class="hz-nav-item">
+          <a href="/admin/dashboard" class="hz-nav-link">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="7" height="9" x="3" y="3" rx="1" />
+              <rect width="7" height="5" x="14" y="3" rx="1" />
+              <rect width="7" height="9" x="14" y="12" rx="1" />
+              <rect width="7" height="5" x="3" y="16" rx="1" />
+            </svg>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li class="hz-nav-item">
+          <a href="/admin/products" class="hz-nav-link">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m7.5 4.27 9 5.15" />
+              <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+              <path d="m3.3 7 8.7 5 8.7-5" />
+              <path d="M12 22V12" />
+            </svg>
+            <span>Inventory &amp; Stock</span>
+          </a>
+        </li>
+        <li class="hz-nav-item">
+          <a href="/admin/orders" class="hz-nav-link active">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="8" cy="21" r="1" />
+              <circle cx="19" cy="21" r="1" />
+              <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
+            </svg>
+            <span>Orders &amp; POS</span>
+          </a>
+        </li>
+        <li class="hz-nav-item">
+          <a href="/admin/returns" class="hz-nav-link">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+              <path d="M3 3v5h5" />
+            </svg>
+            <span>Returns Handling</span>
+          </a>
+        </li>
+        <li class="hz-nav-item">
+          <a href="/admin/reports" class="hz-nav-link">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" x2="12" y1="20" y2="10" />
+              <line x1="18" x2="18" y1="20" y2="4" />
+              <line x1="6" x2="6" y1="20" y2="16" />
+            </svg>
+            <span>Sales Reports</span>
+          </a>
+        </li>
+        <li class="hz-nav-item">
+          <a href="/admin/chats" class="hz-nav-link">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
+            </svg>
+            <span>Customer Chats</span>
+          </a>
+        </li>
+        <li class="hz-nav-item" style="margin-top: 1.5rem;">
+          <a href="javascript:void(0)" onclick="adminLogout()" class="hz-nav-link logout">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" x2="9" y1="12" y2="12" />
+            </svg>
+            <span>Logout</span>
+          </a>
+        </li>
+      </ul>
+
+      <!-- Sidebar Promo Card -->
+      <div class="hz-sidebar-promo">
+        <div class="hz-sidebar-promo-title">FelliRo POS Cashier</div>
+        <div class="hz-sidebar-promo-desc">Instant offline sales, receipts &amp; barcode printing.</div>
+        <a href="javascript:void(0)" onclick="openPosOrderModal()" style="font-size: 0.75rem; font-weight: 700; color: #FFFFFF; text-decoration: underline;">Open Cashier &rarr;</a>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="hz-main">
+      <!-- Top Floating Navbar -->
+      <header class="hz-navbar">
+        <div class="hz-navbar-brand">
+          <div class="hz-breadcrumbs">
+            <a href="/admin/dashboard">Pages</a> / <span>Orders & POS</span>
+          </div>
+          <h1 class="hz-page-title">Orders & POS Processing</h1>
+        </div>
+
+        <div class="hz-navbar-actions">
+          <!-- WhatsApp Bot Status Pill -->
+          <div class="hz-bot-badge" id="wa-status-badge" onclick="openQrModal()" title="Click to view WhatsApp Bot connection or scan QR">
+            <span class="hz-bot-dot" id="wa-status-dot"></span>
+            <span id="wa-status-text">Bot Online</span>
+          </div>
+
+          <button class="hz-btn-pill" style="background: #F4F7FE; color: var(--hz-navy);" onclick="openCityManagementModal()">
+            <svg style="width: 15px; height: 15px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+              <circle cx="12" cy="10" r="3"></circle>
+            </svg>
+            Delivery Charges
+          </button>
+
+          <button class="hz-btn-pill hz-btn-primary" onclick="openPosOrderModal()">
+            <svg style="width: 15px; height: 15px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="9" cy="21" r="1"></circle>
+              <circle cx="20" cy="21" r="1"></circle>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+            </svg>
+            + New POS Order
+          </button>
+        </div>
+      </header>
+
+      <!-- Top 4 Horizon KPI Cards -->
+      <section class="hz-kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+        <!-- Total Orders -->
+        <div class="hz-kpi-card">
+          <div class="hz-icon-circle" style="background: #EFF6FF; color: #3B82F6;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="8" cy="21" r="1" />
+              <circle cx="19" cy="21" r="1" />
+              <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
+            </svg>
+          </div>
+          <div>
+            <div class="hz-kpi-label">Total Orders</div>
+            <div class="hz-kpi-value" id="orders-total-count">0</div>
+            <div style="font-size: 0.75rem; color: #A3AED0; font-weight: 600; margin-top: 2px;">All Lifetime Orders</div>
+          </div>
+        </div>
+
+        <!-- Pending Orders -->
+        <div class="hz-kpi-card">
+          <div class="hz-icon-circle" style="background: #FFFBEB; color: #D97706;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+          </div>
+          <div>
+            <div class="hz-kpi-label">Pending Action</div>
+            <div class="hz-kpi-value" id="orders-pending-count" style="color: #D97706;">0</div>
+            <div class="hz-kpi-trend" style="color: #D97706;">Awaiting Dispatch</div>
+          </div>
+        </div>
+
+        <!-- Delivered Orders -->
+        <div class="hz-kpi-card">
+          <div class="hz-icon-circle" style="background: #E6FAF5; color: #01B574;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+              <polyline points="22 4 12 14.01 9 11.01" />
+            </svg>
+          </div>
+          <div>
+            <div class="hz-kpi-label">Delivered Orders</div>
+            <div class="hz-kpi-value" id="orders-delivered-count" style="color: #01B574;">0</div>
+            <div class="hz-kpi-trend" style="color: #01B574;">Fulfilled</div>
+          </div>
+        </div>
+
+        <!-- Total Revenue -->
+        <div class="hz-kpi-card">
+          <div class="hz-icon-circle" style="background: #F4F2FF; color: #4318FF;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="20" height="14" x="2" y="5" rx="2" />
+              <line x1="2" x2="22" y1="10" y2="10" />
+            </svg>
+          </div>
+          <div>
+            <div class="hz-kpi-label">Total Revenue</div>
+            <div class="hz-kpi-value" id="orders-revenue-total" style="font-size: 1.35rem; color: #4318FF;">Rs. 0.00</div>
+            <div style="font-size: 0.75rem; color: #A3AED0; font-weight: 600; margin-top: 2px;">Active Turnover</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Orders Data Table Card -->
+      <section class="hz-card" style="margin-top: 1.5rem;">
+        <div class="hz-card-header" style="flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid var(--hz-border); padding-bottom: 1.2rem; margin-bottom: 1.2rem;">
+          <div>
+            <div class="hz-card-subtitle">Fulfillment & Cashier Control</div>
+            <h2 class="hz-card-title">Customer Orders & Invoices</h2>
+          </div>
+
+          <!-- Controls: Live Search + Status Filter + Refresh -->
+          <div class="hz-table-controls" style="margin-bottom: 0;">
+            <div class="hz-table-filters">
+              <div class="hz-search-box" style="width: 260px;">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" x2="16.65" y1="21" y2="16.65" />
+                </svg>
+                <input type="text" id="order-search-input" class="hz-search-input" placeholder="Search order #, customer..." oninput="filterOrdersTable()">
+              </div>
+
+              <select id="order-status-filter" class="hz-filter-select" onchange="filterOrdersTable()">
+                <option value="ALL">All Statuses</option>
+                <option value="pending">Pending</option>
+                <option value="processing">Processing & Packing</option>
+                <option value="ready_for_dispatch">Ready for Dispatch</option>
+                <option value="handed_to_courier">Handed to Courier</option>
+                <option value="in_transit">In Transit</option>
+                <option value="delivered">Delivered</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+
+              <button type="button" class="hz-btn-pill" id="print-address-modal-btn" onclick="openAddressPrintModal()" style="background: #4318FF; color: #FFFFFF; font-weight: 700; box-shadow: 0 4px 12px rgba(67, 24, 255, 0.25);" title="Select orders & print shipping address labels (4 per A4 page)">
+                <svg style="width: 15px; height: 15px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                  <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                  <rect x="6" y="14" width="12" height="8"></rect>
+                </svg>
+                Print Address
+              </button>
+
+              <button type="button" class="hz-btn-pill" id="refresh-orders-btn" onclick="refreshOrdersData()" style="background: #F4F7FE; color: var(--hz-navy);" title="Refresh orders & stats">
+                <svg id="refresh-orders-icon" style="width: 14px; height: 14px; transition: transform 0.4s ease;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                  <path d="M21 3v5h-5" />
+                  <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                  <path d="M3 21v-5h5" />
+                </svg>
+                Refresh
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="hz-table-container">
+          <table class="hz-table">
+            <thead>
+              <tr>
+                <th>Order Number</th>
+                <th>Customer Details</th>
+                <th>Amount (LKR)</th>
+                <th>Status</th>
+                <th>Order Date</th>
+                <th style="text-align: right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-orders-table-body">
+              <tr>
+                <td colspan="6" style="text-align: center; color: var(--hz-gray-sub); padding: 2.5rem;">
+                  Loading customer orders...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Order Status Update Horizon Modal -->
+  <div class="modal-overlay" id="status-modal">
+    <div class="hz-modal-card" style="max-width: 520px;">
+      <div class="hz-modal-header">
+        <div>
+          <div style="font-size: 0.78rem; font-weight: 700; color: var(--hz-brand); text-transform: uppercase;">Fulfillment Audit</div>
+          <h3 class="hz-modal-title">Update Order Status</h3>
+        </div>
+        <button type="button" class="hz-modal-close" onclick="closeModal('status-modal')">✕</button>
+      </div>
+
+      <form id="status-update-form">
+        <input type="hidden" id="status-order-id">
+
+        <div class="hz-form-group">
+          <label class="hz-form-label">Order Status</label>
+          <select id="status-select" class="hz-form-select" required>
+            <option value="pending">Pending</option>
+            <option value="processing">Processing & Packing</option>
+            <option value="ready_for_dispatch">Ready for Dispatch</option>
+            <option value="handed_to_courier">Handed to Courier</option>
+            <option value="in_transit">In Transit</option>
+            <option value="delivered">Delivered</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+
+        <div class="hz-form-group">
+          <label class="hz-form-label">Courier Tracking Barcode / Waybill (Fardar Domestic)</label>
+          <input type="text" id="status-tracking-num" class="hz-form-input" placeholder="e.g. IND1156565">
+        </div>
+
+        <div class="hz-form-group">
+          <label class="hz-form-label">Status Note / Audit Reason</label>
+          <textarea id="status-note" class="hz-form-textarea" rows="2" placeholder="e.g. Handed over to Pronto Courier service"></textarea>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.8rem; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--hz-border);">
+          <button type="button" class="hz-btn-pill" style="background: #F4F7FE; color: var(--hz-navy);" onclick="closeModal('status-modal')">Cancel</button>
+          <button type="submit" class="hz-btn-pill hz-btn-primary">Update Status</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Manual POS Order Modal with Cart -->
+  <div class="modal-overlay" id="pos-modal">
+    <div class="hz-modal-card" style="max-width: 840px;">
+      <div class="hz-modal-header">
+        <div>
+          <div style="font-size: 0.78rem; font-weight: 700; color: var(--hz-brand); text-transform: uppercase;">Cashier & Counter</div>
+          <h3 class="hz-modal-title">Create Manual POS Order</h3>
+        </div>
+        <button type="button" class="hz-modal-close" onclick="closeModal('pos-modal')">✕</button>
+      </div>
+
+      <!-- Smart AI Paste Input Box -->
+      <div style="background: linear-gradient(135deg, rgba(67, 24, 255, 0.05) 0%, rgba(117, 81, 255, 0.08) 100%); border: 1.5px dashed rgba(67, 24, 255, 0.25); border-radius: 14px; padding: 12px 16px; margin-bottom: 1.2rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+          <label class="hz-form-label" style="margin-bottom: 0; color: var(--hz-brand); font-weight: 700; display: flex; align-items: center; gap: 6px; font-size: 0.82rem;">
+            <svg style="width: 14px; height: 14px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+            Paste Raw Message / Notes (Optional AI Smart Parse)
+          </label>
+          <span style="font-size: 0.72rem; color: var(--hz-gray-sub);">Auto-extracts customer details & items</span>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <textarea id="pos-smart-paste-input" class="hz-form-textarea" rows="2" placeholder="Paste customer chat text, WhatsApp message, or raw order notes here..." style="background: #FFFFFF; font-size: 0.82rem; margin-bottom: 0; border: 1px solid #CBD5E1;"></textarea>
+          <button type="button" class="hz-btn-pill hz-btn-primary" onclick="parseSmartTextWithAi()" style="white-space: nowrap; height: fit-content; align-self: flex-end; padding: 0.6rem 1rem; font-size: 0.8rem; background: linear-gradient(135deg, #4318FF 0%, #7551FF 100%);">
+            🪄 Parse with AI
+          </button>
+        </div>
+      </div>
+
+      <form id="pos-form" onsubmit="handlePosSubmit(event)">
+        <!-- Customer Details Grid -->
+        <div class="hz-grid-2" style="margin-bottom: 1rem;">
+          <div class="hz-form-group">
+            <label class="hz-form-label">Customer Name *</label>
+            <input type="text" id="pos-customer-name" class="hz-form-input" required placeholder="e.g. Ruwan Perera">
+          </div>
+          <div class="hz-form-group">
+            <label class="hz-form-label">Phone Number *</label>
+            <input type="text" id="pos-customer-phone" class="hz-form-input" required placeholder="0771234567">
+          </div>
+        </div>
+
+        <div class="hz-form-group">
+          <label class="hz-form-label">Full Delivery Address *</label>
+          <textarea id="pos-customer-address" class="hz-form-textarea" rows="2" required placeholder="123 Main Street, Colombo 03"></textarea>
+        </div>
+
+        <div class="hz-grid-2" style="margin-bottom: 1rem;">
+          <div class="hz-form-group">
+            <label class="hz-form-label">Province *</label>
+            <select id="pos-province" class="hz-form-select" onchange="onPosProvinceChange()" required>
+              <option value="Western" selected>Western Province</option>
+              <option value="Central">Central Province</option>
+              <option value="Southern">Southern Province</option>
+              <option value="Northern">Northern Province</option>
+              <option value="Eastern">Eastern Province</option>
+              <option value="North Western">North Western Province</option>
+              <option value="North Central">North Central Province</option>
+              <option value="Uva">Uva Province</option>
+              <option value="Sabaragamuwa">Sabaragamuwa Province</option>
+            </select>
+          </div>
+          <div class="hz-form-group">
+            <label class="hz-form-label">District / City *</label>
+            <select id="pos-city" class="hz-form-select" onchange="onPosDistrictChange()" required>
+              <!-- Loaded dynamically via JS -->
+            </select>
+          </div>
+        </div>
+
+        <!-- Payment Method Notice -->
+        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 8px 12px; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--hz-navy); font-weight: 600;">
+            <svg style="width: 16px; height: 16px; color: #01B574;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+            Payment Method: <span style="color: #01B574; font-weight: 700;">Bank Transfer (Strict)</span>
+          </div>
+          <span style="font-size: 0.72rem; color: var(--hz-gray-sub);">COD is not available</span>
+        </div>
+
+        <!-- Add Items Box -->
+        <div class="hz-pos-box">
+          <label class="hz-form-label" style="color: var(--hz-brand); display: flex; align-items: center; gap: 8px; font-size: 0.9rem; margin-bottom: 0.8rem;">
+            <svg style="width: 18px; height: 18px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="9" cy="21" r="1"></circle>
+              <circle cx="20" cy="21" r="1"></circle>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+            </svg>
+            Add Items to Order
+          </label>
+
+          <input type="text" id="pos-product-search" class="hz-form-input" placeholder="Search product name or SKU..." oninput="filterPosProducts()" style="margin-bottom: 0.8rem; background: #FFFFFF; border: 1.5px solid #E2E8F0;">
+          
+          <select id="pos-product-id" class="hz-form-select" size="3" style="height: 110px; margin-bottom: 1rem; background: #FFFFFF; border: 1.5px solid #E2E8F0;" onchange="onPosProductSelect()">
+            <!-- Loaded dynamically via JS -->
+          </select>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 0.8rem; align-items: end;">
+            <div>
+              <label class="hz-form-label" style="font-size: 0.78rem;">Size *</label>
+              <select id="pos-size" class="hz-form-select" style="background: #FFFFFF; border: 1.5px solid #E2E8F0;" onchange="if(window.updatePosQtyLimit) window.updatePosQtyLimit()">
+                <option value="" disabled selected>Select Product First</option>
+              </select>
+            </div>
+            <div>
+              <label class="hz-form-label" style="font-size: 0.78rem;">Color *</label>
+              <select id="pos-color" class="hz-form-select" style="background: #FFFFFF; border: 1.5px solid #E2E8F0;" onchange="if(window.updatePosQtyLimit) window.updatePosQtyLimit()">
+                <option value="" disabled selected>Select Product First</option>
+              </select>
+            </div>
+            <div>
+              <label class="hz-form-label" style="font-size: 0.78rem;">Quantity</label>
+              <input type="number" id="pos-quantity" class="hz-form-input" value="1" min="1" style="background: #FFFFFF; border: 1.5px solid #E2E8F0;" oninput="if(this.max && parseInt(this.value) > parseInt(this.max)) this.value = this.max; if(this.value < 1) this.value = 1;">
+            </div>
+            <div>
+              <button type="button" class="hz-btn-pill hz-btn-primary" onclick="addToPosCart()" style="padding: 0.7rem 1.2rem; white-space: nowrap;">
+                + Add Item
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- POS Cart Table -->
+        <div style="border: 1px solid var(--hz-border); border-radius: 16px; overflow: hidden; margin-bottom: 1.5rem; background: #FFFFFF;">
+          <table class="hz-table" style="margin: 0;">
+            <thead>
+              <tr>
+                <th>Item Details</th>
+                <th>Qty</th>
+                <th style="text-align: right;">Unit Price</th>
+                <th style="text-align: right;">Total</th>
+                <th style="width: 40px; text-align: center;"></th>
+              </tr>
+            </thead>
+            <tbody id="pos-cart-body">
+              <tr>
+                <td colspan="5" style="text-align: center; color: var(--hz-gray-sub); padding: 1.5rem;">
+                  Cart is empty. Select items above to add.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div id="pos-cart-summary" class="hz-pos-summary-card">
+            <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 1.5rem; align-items: center;">
+              <div class="hz-form-group" style="margin-bottom: 0;">
+                <label class="hz-form-label" style="color: var(--hz-navy); display: flex; align-items: center; gap: 6px;">
+                  <svg style="width: 16px; height: 16px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2" />
+                    <path d="M15 18H9" />
+                    <path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14" />
+                    <circle cx="17" cy="18" r="2" />
+                    <circle cx="7" cy="18" r="2" />
+                  </svg>
+                  Courier / Delivery Charge (LKR)
+                </label>
+                <input type="number" id="pos-delivery-fee" class="hz-form-input" value="450" min="0" step="10" placeholder="450" oninput="renderPosCart()" style="background: #FFFFFF; border: 1.5px solid #E2E8F0; font-weight: 700;">
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 0.85rem; color: var(--hz-gray-sub);">Items Subtotal: <span id="pos-subtotal" style="font-weight: 700; color: var(--hz-navy);">LKR 0.00</span></div>
+                <div style="font-size: 0.85rem; color: var(--hz-gray-sub); margin-top: 3px;">Delivery Fee: <span id="pos-delivery-display" style="font-weight: 700; color: var(--hz-navy);">LKR 450.00</span></div>
+                <div style="margin-top: 8px;">
+                  <span style="font-size: 0.85rem; color: var(--hz-gray-sub); font-weight: 600;">Grand Total: </span>
+                  <span id="pos-grand-total" class="hz-pos-grand-total">LKR 450.00</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.8rem; padding-top: 1rem; border-top: 1px solid var(--hz-border);">
+          <button type="button" class="hz-btn-pill" style="background: #F4F7FE; color: var(--hz-navy);" onclick="closeModal('pos-modal')">Cancel</button>
+          <button type="submit" class="hz-btn-pill hz-btn-primary" id="pos-submit-btn">Complete & Create Order</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Order Details Horizon Modal -->
+  <div class="modal-overlay" id="edit-order-modal">
+    <div class="hz-modal-card" style="max-width: 680px;">
+      <div class="hz-modal-header">
+        <div>
+          <div style="font-size: 0.78rem; font-weight: 700; color: var(--hz-brand); text-transform: uppercase;">Order Editor</div>
+          <h3 class="hz-modal-title">Edit Order Details</h3>
+        </div>
+        <button type="button" class="hz-modal-close" onclick="closeModal('edit-order-modal')">✕</button>
+      </div>
+
+      <form id="edit-order-form" onsubmit="handleEditOrderSubmit(event)">
+        <input type="hidden" id="edit-order-id">
+
+        <div class="hz-grid-2" style="margin-bottom: 1rem;">
+          <div class="hz-form-group">
+            <label class="hz-form-label">Customer Name *</label>
+            <input type="text" id="edit-customer-name" class="hz-form-input" required>
+          </div>
+          <div class="hz-form-group">
+            <label class="hz-form-label">Phone Number *</label>
+            <input type="text" id="edit-customer-phone" class="hz-form-input" required>
+          </div>
+        </div>
+
+        <div class="hz-form-group">
+          <label class="hz-form-label">Email Address</label>
+          <input type="email" id="edit-customer-email" class="hz-form-input">
+        </div>
+
+        <div class="hz-form-group">
+          <label class="hz-form-label">Delivery Address</label>
+          <textarea id="edit-customer-address" class="hz-form-textarea" rows="2"></textarea>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.8rem; margin-bottom: 1rem;">
+          <div class="hz-form-group">
+            <label class="hz-form-label">Province</label>
+            <select id="edit-province" class="hz-form-select" onchange="onEditProvinceChange()">
+              <option value="Western">Western</option>
+              <option value="Central">Central</option>
+              <option value="Southern">Southern</option>
+              <option value="Northern">Northern</option>
+              <option value="Eastern">Eastern</option>
+              <option value="North Western">North Western</option>
+              <option value="North Central">North Central</option>
+              <option value="Uva">Uva</option>
+              <option value="Sabaragamuwa">Sabaragamuwa</option>
+            </select>
+          </div>
+          <div class="hz-form-group">
+            <label class="hz-form-label">District / City</label>
+            <select id="edit-city" class="hz-form-select">
+              <!-- Loaded dynamically -->
+            </select>
+          </div>
+          <div class="hz-form-group">
+            <label class="hz-form-label">Delivery Fee (LKR)</label>
+            <input type="number" id="edit-delivery-fee" class="hz-form-input" min="0" step="10">
+          </div>
+        </div>
+
+        <div class="hz-grid-2" style="margin-bottom: 1rem;">
+          <div class="hz-form-group">
+            <label class="hz-form-label">Courier Tracking Barcode / Waybill</label>
+            <input type="text" id="edit-tracking-number" class="hz-form-input" placeholder="e.g. IND1156565">
+          </div>
+          <div class="hz-form-group">
+            <label class="hz-form-label">Order Status</label>
+            <select id="edit-order-status" class="hz-form-select">
+              <option value="pending">Pending</option>
+              <option value="processing">Processing & Packing</option>
+              <option value="ready_for_dispatch">Ready for Dispatch</option>
+              <option value="handed_to_courier">Handed to Courier</option>
+              <option value="in_transit">In Transit</option>
+              <option value="delivered">Delivered</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="hz-form-group">
+          <label class="hz-form-label">Delivery / Special Notes</label>
+          <textarea id="edit-delivery-notes" class="hz-form-textarea" rows="2" placeholder="e.g. Call before delivery"></textarea>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.8rem; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--hz-border);">
+          <button type="button" class="hz-btn-pill" style="background: #F4F7FE; color: var(--hz-navy);" onclick="closeModal('edit-order-modal')">Cancel</button>
+          <button type="submit" class="hz-btn-pill hz-btn-primary" id="edit-order-submit-btn">Save Order Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Delivery Cities & Charges Management Horizon Modal -->
+  <div class="modal-overlay" id="city-modal">
+    <div class="hz-modal-card" style="max-width: 740px;">
+      <div class="hz-modal-header">
+        <div>
+          <div style="font-size: 0.78rem; font-weight: 700; color: var(--hz-brand); text-transform: uppercase;">Shipping Rates</div>
+          <h3 class="hz-modal-title">Delivery Cities & Charges</h3>
+        </div>
+        <button type="button" class="hz-modal-close" onclick="closeModal('city-modal')">✕</button>
+      </div>
+
+      <!-- Add / Edit City Form -->
+      <form id="add-city-form" onsubmit="handleAddCitySubmit(event)" style="background: #F8FAFC; padding: 1.25rem; border-radius: 16px; border: 1px solid var(--hz-border); margin-bottom: 1.5rem;">
+        <input type="hidden" id="city-edit-id" value="">
+        <h4 id="city-form-title" style="font-size: 0.95rem; font-weight: 800; margin-bottom: 0.8rem; color: var(--hz-brand);">+ Add New Delivery City / District</h4>
+        
+        <div style="display: grid; grid-template-columns: 2fr 1.5fr 1fr; gap: 0.8rem; align-items: flex-end;">
+          <div>
+            <label class="hz-form-label" style="font-size: 0.78rem;">City / District Name *</label>
+            <input type="text" id="new-city-name" class="hz-form-input" placeholder="e.g. Gampaha" required style="background: #FFFFFF; border: 1.5px solid #E2E8F0;">
+          </div>
+          <div>
+            <label class="hz-form-label" style="font-size: 0.78rem;">Province *</label>
+            <select id="new-city-province" class="hz-form-select" style="background: #FFFFFF; border: 1.5px solid #E2E8F0;" required>
+              <option value="Western">Western</option>
+              <option value="Central">Central</option>
+              <option value="Southern">Southern</option>
+              <option value="Northern">Northern</option>
+              <option value="Eastern">Eastern</option>
+              <option value="North Western">North Western</option>
+              <option value="North Central">North Central</option>
+              <option value="Uva">Uva</option>
+              <option value="Sabaragamuwa">Sabaragamuwa</option>
+            </select>
+          </div>
+          <div>
+            <label class="hz-form-label" style="font-size: 0.78rem;">Charge (LKR) *</label>
+            <input type="number" step="10" id="new-city-charge" class="hz-form-input" placeholder="400" required style="background: #FFFFFF; border: 1.5px solid #E2E8F0;">
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 1rem;">
+          <button type="button" id="city-cancel-edit-btn" class="hz-btn-pill" style="display: none; background: #F1F5F9; color: var(--hz-navy);" onclick="resetCityForm()">Cancel Edit</button>
+          <button type="submit" id="city-submit-btn" class="hz-btn-pill hz-btn-primary">+ Save Delivery City</button>
+        </div>
+      </form>
+
+      <!-- Active Cities List Table -->
+      <h4 style="font-size: 0.95rem; font-weight: 800; color: var(--hz-navy); margin-bottom: 0.8rem;">Existing Delivery Cities & Charges</h4>
+      <div style="max-height: 280px; overflow-y: auto; border: 1px solid var(--hz-border); border-radius: 16px; background: #FFFFFF;">
+        <table class="hz-table" style="margin: 0;">
+          <thead>
+            <tr>
+              <th>City / District</th>
+              <th>Province</th>
+              <th>Delivery Charge</th>
+              <th style="text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="city-table-body">
+            <!-- Loaded via JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- WhatsApp Bot QR Scanner Modal -->
+  <div class="modal-overlay" id="qr-modal">
+    <div class="hz-modal-card" style="max-width: 480px; text-align: center;">
+      <div class="hz-modal-header" style="justify-content: center; position: relative;">
+        <h3 class="hz-modal-title">WhatsApp Bot Status</h3>
+        <button type="button" class="hz-modal-close" style="position: absolute; right: 0;" onclick="closeQrModal()">✕</button>
+      </div>
+      <p id="qr-modal-desc" style="color: var(--hz-gray-sub); font-size: 0.88rem; margin-bottom: 1.5rem;">Scan the QR code with WhatsApp Linked Devices to activate your automated order bot.</p>
+
+      <div id="qrcode-container" style="display: flex; justify-content: center; align-items: center; min-height: 256px; background: #F8FAFC; border-radius: 16px; margin-bottom: 1.5rem; border: 1px solid var(--hz-border); padding: 1.2rem;">
+        <!-- QR code goes here -->
+      </div>
+
+      <div style="display: flex; gap: 1rem; justify-content: center;">
+        <button class="hz-btn-pill" style="background: #F1F5F9; color: var(--hz-navy);" onclick="closeQrModal()">Close</button>
+        <button class="hz-btn-pill hz-btn-primary" onclick="forceRestartBot()">Force Restart</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shipping Address Labels Print Selection Modal -->
+  <div class="modal-overlay" id="address-print-modal">
+    <div class="hz-modal-card" style="max-width: 950px; width: 95%;">
+      <div class="hz-modal-header" style="border-bottom: 1px solid var(--hz-border); padding-bottom: 1rem; margin-bottom: 1rem;">
+        <div>
+          <div style="font-size: 0.78rem; font-weight: 700; color: var(--hz-brand); text-transform: uppercase;">Courier Fulfillment &amp; Packing</div>
+          <h3 class="hz-modal-title" style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+            <span style="display: inline-flex; align-items: center; gap: 0.4rem;">
+              <svg style="width: 20px; height: 20px; color: var(--hz-brand);" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+              Print Shipping Address Labels
+            </span>
+            <span style="font-size: 0.75rem; font-weight: 700; background: #EEF2FF; color: #4318FF; padding: 0.25rem 0.65rem; border-radius: 999px;">A4 Landscape (4 Labels / Sheet)</span>
+          </h3>
+        </div>
+        <button type="button" class="hz-modal-close" onclick="closeModal('address-print-modal')">✕</button>
+      </div>
+
+      <!-- Filters & Select All Toolbar -->
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.8rem; background: #F8FAFC; padding: 0.9rem 1.1rem; border-radius: 14px; border: 1px solid var(--hz-border); margin-bottom: 1rem;">
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem;">
+          <div class="hz-search-box" style="width: 220px; background: #FFFFFF;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" x2="16.65" y1="21" y2="16.65" />
+            </svg>
+            <input type="text" id="label-search-input" class="hz-search-input" placeholder="Search customer, order #..." oninput="filterAddressPrintList()">
+          </div>
+
+          <select id="label-status-filter" class="hz-filter-select" style="background: #FFFFFF;" onchange="filterAddressPrintList()">
+            <option value="ALL">All Statuses</option>
+            <option value="processing" selected>Processing &amp; Packing (Recommended)</option>
+            <option value="ready_for_dispatch">Ready for Dispatch</option>
+            <option value="pending">Pending</option>
+            <option value="handed_to_courier">Handed to Courier</option>
+            <option value="in_transit">In Transit</option>
+            <option value="delivered">Delivered</option>
+          </select>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <label style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; font-weight: 700; color: var(--hz-navy); cursor: pointer; user-select: none;">
+            <input type="checkbox" id="label-select-all-cb" onchange="toggleSelectAllAddressLabels(this.checked)" style="width: 17px; height: 17px; cursor: pointer; accent-color: var(--hz-brand);">
+            Select All
+          </label>
+          <span id="label-selection-summary" style="font-size: 0.82rem; font-weight: 700; color: #4318FF; background: #EEF2FF; padding: 0.35rem 0.75rem; border-radius: 8px;">
+            0 selected (0 A4 sheets)
+          </span>
+        </div>
+      </div>
+
+      <!-- Orders Selection Table -->
+      <div style="max-height: 380px; overflow-y: auto; border: 1px solid var(--hz-border); border-radius: 14px; background: #FFFFFF; margin-bottom: 1.2rem;">
+        <table class="hz-table" style="margin: 0;">
+          <thead style="position: sticky; top: 0; background: #F8FAFC; z-index: 2; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+            <tr>
+              <th style="width: 45px; text-align: center;">✓</th>
+              <th>Order #</th>
+              <th>Customer &amp; Phone</th>
+              <th>Delivery Address &amp; City</th>
+              <th>Status</th>
+              <th>Payment &amp; Amount</th>
+            </tr>
+          </thead>
+          <tbody id="label-orders-table-body">
+            <!-- Dynamic rows -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Modal Footer -->
+      <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--hz-border); padding-top: 1rem; flex-wrap: wrap; gap: 0.8rem;">
+        <div style="font-size: 0.8rem; color: var(--hz-gray-sub); display: flex; align-items: center; gap: 0.4rem;">
+          <svg style="width: 14px; height: 14px; color: var(--hz-gray-sub);" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><path d="M8.12 8.12 12 12"/><circle cx="6" cy="18" r="3"/><path d="M14.8 14.8 20 20"/><path d="m8.12 15.88 6.68-6.68"/><path d="M14.8 9.2 20 4"/></svg>
+          <span>4 labels per A4 Landscape sheet with dashed cutting lines.</span>
+        </div>
+        <div style="display: flex; gap: 0.8rem;">
+          <button type="button" class="hz-btn-pill" style="background: #F4F7FE; color: var(--hz-navy);" onclick="closeModal('address-print-modal')">Close</button>
+          <button type="button" class="hz-btn-pill hz-btn-primary" id="btn-execute-print-labels" onclick="executePrintSelectedAddressLabels()" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.65rem 1.4rem;">
+            <svg style="width: 16px; height: 16px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 6 2 18 2 18 9"></polyline>
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+              <rect x="6" y="14" width="12" height="8"></rect>
+            </svg>
+            Print Selected Labels
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Courier Live Tracking Modal (Fardar Domestic) -->
+  <div class="modal-overlay" id="courier-live-modal">
+    <div class="hz-modal-card" style="max-width: 560px;">
+      <div class="hz-modal-header">
+        <div>
+          <div style="font-size: 0.78rem; font-weight: 700; color: #0284C7; text-transform: uppercase; letter-spacing: 0.5px;">Live Logistics Tracking</div>
+          <h3 class="hz-modal-title" style="display: flex; align-items: center; gap: 0.5rem;">
+            <span>🚚</span> Fardar Express Domestic
+          </h3>
+        </div>
+        <button type="button" class="hz-modal-close" onclick="closeModal('courier-live-modal')">✕</button>
+      </div>
+
+      <div id="courier-modal-content" style="padding: 0.5rem 0;">
+        <div style="text-align: center; padding: 2.5rem 0; color: var(--hz-gray-sub);">
+          <div class="hz-spinner" style="width: 32px; height: 32px; border-width: 3px; margin: 0 auto 1rem;"></div>
+          Fetching live status from Fardar Domestic servers...
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--hz-border); padding-top: 1rem; margin-top: 1rem;">
+        <a id="courier-external-link" href="https://www.fdedomestic.com/" target="_blank" rel="noopener noreferrer" style="font-size: 0.85rem; font-weight: 600; color: #0284C7; text-decoration: none; display: flex; align-items: center; gap: 0.3rem;">
+          Open Courier Portal ↗
+        </a>
+        <div style="display: flex; gap: 0.8rem;">
+          <button type="button" class="hz-btn-pill" id="courier-refresh-btn" onclick="refreshCurrentCourierStatus()" style="background: #E0F2FE; color: #0284C7; font-weight: 600;">
+            ↻ Refresh Status
+          </button>
+          <button type="button" class="hz-btn-pill" style="background: #F4F7FE; color: var(--hz-navy);" onclick="closeModal('courier-live-modal')">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/admin_v2.js?v=20260805_courier"></script>
+</body>
+
+</html>

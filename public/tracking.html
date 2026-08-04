@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Track Order | FelliRo</title>
+  <link rel="icon" href="/images/logo.png" type="image/png">
+  <link rel="stylesheet" href="/css/store.css?v=2026">
+</head>
+<body>
+
+  <!-- Loading Screen -->
+  <div id="felli-loader">
+    <div class="loader-content">
+      <div class="loader-logo">FelliRo</div>
+      <div class="loader-spinner"></div>
+    </div>
+  </div>
+
+  <!-- Header Area -->
+  <header class="karma-header">
+    <div class="container">
+      <div class="main-menu">
+        <a href="/" class="nav-brand">
+          <img src="/images/logo.png" alt="FelliRo Logo">
+        </a>
+        <nav class="nav-links">
+          <a href="/" class="nav-link">Home</a>
+          <a href="/products" class="nav-link">Boutique</a>
+          <a href="/tracking" class="nav-link active">Order Status</a>
+        </nav>
+        <div class="nav-icons">
+          <button class="icon-btn" onclick="openCart()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+            <span class="cart-badge" style="display: none;">0</span>
+          </button>
+          <button class="mobile-menu-btn" style="display: none; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-main); margin-left: 10px;" onclick="document.querySelector('.nav-links').classList.toggle('active')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Generic Banner -->
+  <section class="generic-banner">
+    <div class="container">
+      <h1>Track Your Order</h1>
+      <p>Enter your FelliRo Invoice/Order number to get real-time delivery updates.</p>
+    </div>
+  </section>
+
+  <!-- Tracking Content -->
+  <section class="container" style="margin-bottom: 100px;">
+    <div class="tracking-card reveal">
+      <div class="tracking-search">
+        <input type="text" id="order-number-input" placeholder="e.g. FELLIRO-2026-1234">
+        <button class="btn-primary" style="border-radius: 5px;" onclick="trackOrder()">Track Order</button>
+      </div>
+
+      <div id="tracking-result" style="display: none; margin-top: 40px;">
+        <hr style="border:none; border-top:1px solid var(--border); margin-bottom: 30px;">
+        
+        <!-- Live Courier Tracking Widget (Fardar Domestic) -->
+        <div id="courier-tracking-widget" style="display: none; margin-bottom: 30px;"></div>
+
+        <div style="display: flex; justify-content: space-between; align-items:flex-end; flex-wrap: wrap; gap: 20px; margin-bottom: 30px;">
+          <div>
+            <div style="color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Order Number</div>
+            <h2 id="res-order-no" style="font-size: 24px; color: var(--text-main);">---</h2>
+          </div>
+          <div style="text-align: right;">
+            <div style="color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Store Order Status</div>
+            <div id="res-status" style="font-family: 'Outfit'; font-weight:800; font-size: 20px; color: var(--primary);">---</div>
+          </div>
+        </div>
+
+        <div class="timeline" id="tracking-timeline">
+          <!-- Timeline items injected via JS -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Cart Drawer -->
+  <div class="cart-drawer-overlay" id="cart-drawer-overlay">
+    <div class="cart-drawer">
+      <div class="cart-header"><h2>Your Shopping Bag</h2><button class="cart-close" onclick="closeCart()">✕</button></div>
+      <div class="cart-body" id="cart-items-container"></div>
+      <div class="cart-footer">
+        <div class="checkout-form">
+          <input type="text" id="checkout-name" placeholder="Full Name *" required>
+          <input type="email" id="checkout-email" placeholder="Email Address (Optional)">
+          <input type="tel" id="checkout-phone" placeholder="Phone Number *" required>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <select id="checkout-province" onchange="window.updateDistricts()" required><option value="">Province *</option></select>
+            <select id="checkout-district" onchange="window.updateDeliveryFee()" required><option value="">District *</option></select>
+          </div>
+          <input type="text" id="checkout-address" placeholder="Delivery Address *" required>
+        </div>
+        <div class="cart-summary-line"><span style="color: var(--text-muted);">Subtotal</span><span id="cart-subtotal">Rs. 0.00</span></div>
+        <div class="cart-summary-line"><span style="color: var(--text-muted);">Delivery</span><span id="cart-delivery">Rs. 0.00</span></div>
+        <div class="cart-total"><span>Total</span><span id="cart-grand-total">Rs. 0.00</span></div>
+        <button class="btn-whatsapp" style="width: 100%; margin-top: 15px;" onclick="checkoutWhatsApp()">Checkout via WhatsApp</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="karma-footer">
+    <div class="container">
+      <div class="footer-logo">FelliRo</div>
+      <p class="footer-text">Premium Sri Lankan Clothing Brand. Setting the standard for elegance and quality in modern fashion.</p>
+      <div style="font-size: 13px; color: #555;">&copy; 2026 FelliRo. All Rights Reserved.</div>
+    </div>
+  </footer>
+
+  <script src="/js/store.js?v=2026"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const orderParam = urlParams.get('order');
+      if (orderParam) {
+        document.getElementById('order-number-input').value = orderParam;
+        trackOrder();
+      }
+    });
+
+    function renderCourierCard(cTrk, trkNo) {
+      const courierWidget = document.getElementById('courier-tracking-widget');
+      if (!courierWidget) return;
+
+      if (cTrk && cTrk.success) {
+        const statusLower = (cTrk.courierStatus || '').toLowerCase();
+        const isDelivered = statusLower.includes('deliver');
+        const isInTransit = statusLower.includes('transit') || statusLower.includes('dispatch') || statusLower.includes('way');
+        const statusColor = isDelivered ? '#01B574' : isInTransit ? '#4318FF' : '#F59E0B';
+
+        courierWidget.innerHTML = `
+          <div style="background: linear-gradient(135deg, #111827 0%, #1F2937 100%); color: #FFFFFF; border-radius: 16px; padding: 22px 26px; box-shadow: 0 10px 25px rgba(0,0,0,0.15);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; border-bottom: 1px solid rgba(255,255,255,0.12); padding-bottom: 15px; margin-bottom: 18px;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="background: rgba(255,255,255,0.1); width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px;">
+                  🚚
+                </div>
+                <div>
+                  <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; color: #9CA3AF; font-weight: 600;">Official Delivery Partner</div>
+                  <div style="font-size: 17px; font-weight: 800; color: #FFFFFF; letter-spacing: -0.2px;">Fardar Express Domestic</div>
+                </div>
+              </div>
+              <div>
+                <span style="background: ${statusColor}; color: #FFFFFF; font-size: 13px; font-weight: 700; padding: 6px 14px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+                  ● ${cTrk.courierStatus}
+                </span>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 16px; margin-bottom: 18px;">
+              <div style="background: rgba(255,255,255,0.06); padding: 12px 16px; border-radius: 10px;">
+                <div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; font-weight: 600;">Barcode / Waybill</div>
+                <div style="font-size: 15px; font-weight: 800; color: #60A5FA; font-family: monospace; letter-spacing: 1px; margin-top: 3px;">
+                  ${cTrk.trackingNumber || trkNo}
+                </div>
+              </div>
+              <div style="background: rgba(255,255,255,0.06); padding: 12px 16px; border-radius: 10px;">
+                <div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; font-weight: 600;">Current Hub / Branch</div>
+                <div style="font-size: 15px; font-weight: 700; color: #F3F4F6; margin-top: 3px;">
+                  📍 ${cTrk.branch || 'Sorting Hub'}
+                </div>
+              </div>
+              ${cTrk.lastUpdate ? `
+              <div style="background: rgba(255,255,255,0.06); padding: 12px 16px; border-radius: 10px;">
+                <div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; font-weight: 600;">Last Courier Update</div>
+                <div style="font-size: 13px; font-weight: 600; color: #E5E7EB; margin-top: 3px;">
+                  ${cTrk.lastUpdate}
+                </div>
+              </div>` : ''}
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; align-items: center; gap: 12px; flex-wrap: wrap;">
+              <a href="https://www.fdedomestic.com/" target="_blank" rel="noopener noreferrer" style="color: #93C5FD; font-size: 13px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                Open Courier Portal ↗
+              </a>
+            </div>
+          </div>
+        `;
+        courierWidget.style.display = 'block';
+      } else {
+        courierWidget.innerHTML = `
+          <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 14px; padding: 18px 22px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px;">
+            <div style="display: flex; align-items: center; gap: 14px;">
+              <div style="background: #EFF6FF; color: #2563EB; width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                📦
+              </div>
+              <div>
+                <div style="font-size: 14px; font-weight: 700; color: #1E293B;">Fardar Domestic Waybill: <span style="font-family: monospace; color: #2563EB;">${trkNo}</span></div>
+                <div style="font-size: 12px; color: #64748B; margin-top: 2px;">Barcode assigned. Real-time updates will appear once the parcel is scanned at the courier hub.</div>
+              </div>
+            </div>
+            <a href="https://www.fdedomestic.com/" target="_blank" rel="noopener noreferrer" class="btn-secondary" style="font-size: 12px; padding: 8px 16px; border-radius: 6px; text-decoration: none;">
+              Courier Portal ↗
+            </a>
+          </div>
+        `;
+        courierWidget.style.display = 'block';
+      }
+    }
+
+    async function trackOrder() {
+      const orderNumber = document.getElementById('order-number-input').value.trim();
+      if (!orderNumber) return showToast('Please enter an order number', 'error');
+
+      const submitBtn = document.querySelector('.tracking-search button');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Checking Status...';
+      }
+
+      try {
+        const res = await fetch(`/api/track/${orderNumber}`);
+        const data = await res.json();
+        
+        const resultDiv = document.getElementById('tracking-result');
+        const timeline = document.getElementById('tracking-timeline');
+        const courierWidget = document.getElementById('courier-tracking-widget');
+        
+        if (data.success) {
+          resultDiv.style.display = 'block';
+          document.getElementById('res-order-no').textContent = data.order.order_number;
+          document.getElementById('res-status').textContent = data.order.order_status.toUpperCase().replace(/_/g, ' ');
+          
+          // Render Live Courier Tracking Widget
+          if (data.order.tracking_number) {
+            const trkNo = data.order.tracking_number.trim();
+            if (data.order.courier_tracking && data.order.courier_tracking.success) {
+              renderCourierCard(data.order.courier_tracking, trkNo);
+            } else {
+              // Asynchronous live lookup to guarantee instant real-time data
+              renderCourierCard(null, trkNo);
+              fetch(`/api/courier-track/${encodeURIComponent(trkNo)}`)
+                .then(r => r.json())
+                .then(cData => {
+                  if (cData && cData.success) {
+                    renderCourierCard(cData, trkNo);
+                  }
+                })
+                .catch(err => console.log('Courier async fetch error:', err));
+            }
+          } else {
+            if (courierWidget) courierWidget.style.display = 'none';
+          }
+
+          if (!data.order.history || data.order.history.length === 0) {
+            timeline.innerHTML = `<div class="timeline-item completed">
+              <div class="timeline-date">${new Date(data.order.created_at).toLocaleString()}</div>
+              <div class="timeline-status">Order Placed</div>
+              <div class="timeline-note">Order received and awaiting processing.</div>
+            </div>`;
+          } else {
+            timeline.innerHTML = data.order.history.map(h => {
+              const dateStr = h.created_at ? new Date(h.created_at).toLocaleString() : new Date(data.order.updated_at || data.order.created_at).toLocaleString();
+              return `
+              <div class="timeline-item completed">
+                <div class="timeline-date">${dateStr}</div>
+                <div class="timeline-status">${h.status.toUpperCase()}</div>
+                <div class="timeline-note">${h.notes || h.note || ''}</div>
+              </div>
+            `}).join('');
+          }
+        } else {
+          resultDiv.style.display = 'none';
+          showToast(data.message || 'Order not found', 'error');
+        }
+      } catch(err) {
+        console.error("Tracking Error:", err);
+        showToast('Error tracking order: ' + err.message, 'error');
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Track Order';
+        }
+      }
+    }
+
+    // Loading screen remove
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        const loader = document.getElementById('felli-loader');
+        if (loader) {
+          loader.classList.add('fade-out');
+          setTimeout(() => loader.remove(), 600);
+        }
+      }, 500);
+    });
+  </script>
+</body>
+</html>

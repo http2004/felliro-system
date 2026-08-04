@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Business Reports & Financial Analytics - FelliRo Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <link rel="icon" href="/images/logo.png" type="image/png">
+  <link rel="stylesheet" href="/css/main.css?v=20260802_reports">
+</head>
+
+<body class="hz-body">
+
+  <div class="hz-layout" id="admin-reports-view">
+    <!-- Horizon Sidebar -->
+    <aside class="hz-sidebar">
+      <div class="hz-sidebar-brand">
+        <img src="/images/logo.png" alt="FelliRo" style="height: 32px; max-width: 145px; object-fit: contain;">
+        <span class="hz-sidebar-brand-badge">ADMIN</span>
+      </div>
+
+      <ul class="hz-sidebar-nav">
+        <li class="hz-nav-item">
+          <a href="/admin/dashboard" class="hz-nav-link">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="7" height="9" x="3" y="3" rx="1" />
+              <rect width="7" height="5" x="14" y="3" rx="1" />
+              <rect width="7" height="9" x="14" y="12" rx="1" />
+              <rect width="7" height="5" x="3" y="16" rx="1" />
+            </svg>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li class="hz-nav-item">
+          <a href="/admin/products" class="hz-nav-link">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m7.5 4.27 9 5.15" />
+              <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+              <path d="m3.3 7 8.7 5 8.7-5" />
+              <path d="M12 22V12" />
+            </svg>
+            <span>Inventory &amp; Stock</span>
+          </a>
+        </li>
+        <li class="hz-nav-item">
+          <a href="/admin/orders" class="hz-nav-link">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="8" cy="21" r="1" />
+              <circle cx="19" cy="21" r="1" />
+              <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
+            </svg>
+            <span>Orders &amp; POS</span>
+          </a>
+        </li>
+        <li class="hz-nav-item">
+          <a href="/admin/returns" class="hz-nav-link">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+              <path d="M3 3v5h5" />
+            </svg>
+            <span>Returns Handling</span>
+          </a>
+        </li>
+        <li class="hz-nav-item">
+          <a href="/admin/reports" class="hz-nav-link active">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" x2="12" y1="20" y2="10" />
+              <line x1="18" x2="18" y1="20" y2="4" />
+              <line x1="6" x2="6" y1="20" y2="16" />
+            </svg>
+            <span>Sales Reports</span>
+          </a>
+        </li>
+        <li class="hz-nav-item">
+          <a href="/admin/chats" class="hz-nav-link">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
+            </svg>
+            <span>Customer Chats</span>
+          </a>
+        </li>
+        <li class="hz-nav-item" style="margin-top: 1.5rem;">
+          <a href="javascript:void(0)" onclick="adminLogout()" class="hz-nav-link logout">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" x2="9" y1="12" y2="12" />
+            </svg>
+            <span>Logout</span>
+          </a>
+        </li>
+      </ul>
+
+      <!-- Sidebar Promo Card -->
+      <div class="hz-sidebar-promo">
+        <div class="hz-sidebar-promo-title">FelliRo Analytics Pro</div>
+        <div class="hz-sidebar-promo-desc">Executive turnover, margin breakdown &amp; PDF summaries.</div>
+        <a href="javascript:void(0)" onclick="window.print()" style="font-size: 0.75rem; font-weight: 700; color: #FFFFFF; text-decoration: underline;">Print PDF Report &rarr;</a>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="hz-main">
+      <!-- Top Floating Navbar -->
+      <header class="hz-navbar">
+        <div>
+          <div class="hz-breadcrumbs"><a href="/admin/dashboard">Pages</a> / <span>Sales Reports</span></div>
+          <h1 class="hz-page-title">Business Reports & Financial Analytics</h1>
+        </div>
+
+        <div class="hz-navbar-actions">
+          <!-- Timeframe Period Selector -->
+          <div style="display: flex; align-items: center; gap: 8px; background: #FFFFFF; padding: 4px 10px; border-radius: 12px; border: 1px solid var(--hz-border);">
+            <svg style="width: 15px; height: 15px; color: var(--hz-brand);" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+            <select id="report-period" class="hz-filter-select" style="border: none; background: transparent; padding: 4px 0; font-weight: 700; color: var(--hz-navy);" onchange="initAdminReports()">
+              <option value="all" selected>All Time</option>
+              <option value="today">Today</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+            </select>
+          </div>
+
+          <!-- WhatsApp Bot Status Pill -->
+          <div id="wa-status-badge" class="hz-wa-badge" onclick="openQrModal()" title="Click to view WhatsApp bot connection / QR">
+            <div id="wa-status-dot" class="hz-status-dot"></div>
+            <span id="wa-status-text">Checking Bot...</span>
+          </div>
+
+          <!-- Print / Export PDF Button -->
+          <button class="hz-btn-pill hz-btn-primary" onclick="window.print()" title="Print executive sales report or save as PDF">
+            <svg style="width: 16px; height: 16px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 6 2 18 2 18 9" />
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+              <rect width="12" height="8" x="6" y="14" />
+            </svg>
+            Print / Export PDF
+          </button>
+        </div>
+      </header>
+
+      <!-- 4 Top Financial KPI Cards -->
+      <section class="hz-kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+        <!-- 1. Gross Revenue -->
+        <div class="hz-kpi-card">
+          <div class="hz-icon-circle" style="background: #E6FAF5; color: #01B574;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="2" x2="12" y2="22" />
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+            </svg>
+          </div>
+          <div>
+            <div class="hz-kpi-label">Total Gross Sales</div>
+            <div class="hz-kpi-value" id="report-gross-sales" style="color: #01B574;">Rs. 0.00</div>
+            <div class="hz-kpi-trend" style="color: #01B574;">Gross Turnover</div>
+          </div>
+        </div>
+
+        <!-- 2. Total Cost (COGS) -->
+        <div class="hz-kpi-card">
+          <div class="hz-icon-circle" style="background: #FEEFEF; color: #EE5D50;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="22 17 13.5 8.5 8.5 13.5 2 7" />
+              <polyline points="16 17 22 17 22 11" />
+            </svg>
+          </div>
+          <div>
+            <div class="hz-kpi-label">Total Cost (COGS)</div>
+            <div class="hz-kpi-value" id="report-total-cost" style="color: #EE5D50;">Rs. 0.00</div>
+            <div class="hz-kpi-trend" style="color: #EE5D50;">Direct Item Cost</div>
+          </div>
+        </div>
+
+        <!-- 3. Net Profit -->
+        <div class="hz-kpi-card">
+          <div class="hz-icon-circle" style="background: #EFF6FF; color: #3B82F6;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="20" x2="18" y2="10" />
+              <line x1="12" y1="20" x2="12" y2="4" />
+              <line x1="6" y1="20" x2="6" y2="14" />
+            </svg>
+          </div>
+          <div>
+            <div class="hz-kpi-label">Net Profit</div>
+            <div class="hz-kpi-value" id="report-net-profit" style="color: #3B82F6;">Rs. 0.00</div>
+            <div class="hz-kpi-trend" style="color: #3B82F6;">Income - Cost</div>
+          </div>
+        </div>
+
+        <!-- 4. Profit Margin -->
+        <div class="hz-kpi-card">
+          <div class="hz-icon-circle" style="background: #F4F2FF; color: #4318FF;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+              <polyline points="16 7 22 7 22 13" />
+            </svg>
+          </div>
+          <div>
+            <div class="hz-kpi-label">Average Profit Margin</div>
+            <div class="hz-kpi-value" id="report-profit-margin" style="color: #4318FF;">0.0%</div>
+            <div style="font-size: 0.75rem; color: #A3AED0; font-weight: 600; margin-top: 2px;">Gross Margin %</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2 Side-by-Side Horizon Analytical Cards -->
+      <div class="hz-grid-2" style="margin-top: 1.5rem; align-items: stretch;">
+        <!-- Top Selling Items Card -->
+        <section class="hz-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <div class="hz-card-header" style="border-bottom: 1px solid var(--hz-border); padding-bottom: 1.2rem; margin-bottom: 1rem;">
+              <div>
+                <div class="hz-card-subtitle">Catalog Performance</div>
+                <h2 class="hz-card-title">Top 5 Best-Selling Products</h2>
+              </div>
+            </div>
+
+            <div class="hz-table-container">
+              <table class="hz-table">
+                <thead>
+                  <tr>
+                    <th style="width: 40px;">#</th>
+                    <th>Product Name</th>
+                    <th>Category</th>
+                    <th style="text-align: center;">Units Sold</th>
+                    <th style="text-align: right;">Revenue</th>
+                  </tr>
+                </thead>
+                <tbody id="report-top-items">
+                  <!-- Loaded dynamically via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Regional Sales Performance Card -->
+        <section class="hz-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <div class="hz-card-header" style="border-bottom: 1px solid var(--hz-border); padding-bottom: 1.2rem; margin-bottom: 1rem;">
+              <div>
+                <div class="hz-card-subtitle">Geographic Fulfillment</div>
+                <h2 class="hz-card-title">Provincial Sales Breakdown</h2>
+              </div>
+            </div>
+
+            <div class="hz-table-container">
+              <table class="hz-table">
+                <thead>
+                  <tr>
+                    <th>Province / Territory</th>
+                    <th style="text-align: center;">Orders Count</th>
+                    <th style="text-align: right;">Delivery Charges Collected</th>
+                  </tr>
+                </thead>
+                <tbody id="report-regional-sales">
+                  <!-- Loaded dynamically via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- Core Scripts -->
+  <script src="/js/admin_v2.js?v=20260802_reports"></script>
+</body>
+
+</html>

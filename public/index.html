@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FelliRo | Sri Lanka's Premier Fashion Brand</title>
+  <meta name="description" content="Discover premium Sri Lankan fashion at FelliRo. Shop elegant dresses, tops, bottoms, and accessories.">
+  <link rel="icon" href="/images/logo.png" type="image/png">
+  <link rel="stylesheet" href="/css/store.css?v=2026">
+</head>
+<body>
+
+  <!-- Loading Screen -->
+  <div id="felli-loader">
+    <div class="loader-content">
+      <div class="loader-logo">FelliRo</div>
+      <div class="loader-spinner"></div>
+    </div>
+  </div>
+
+  <!-- Header Area -->
+  <header class="karma-header">
+    <div class="container">
+      <div class="main-menu">
+        <a href="/" class="nav-brand">
+          <img src="/images/logo.png" alt="FelliRo Logo">
+        </a>
+        <nav class="nav-links">
+          <a href="/" class="nav-link active">Home</a>
+          <a href="/products" class="nav-link">Boutique</a>
+          <a href="/tracking" class="nav-link">Order Status</a>
+        </nav>
+        <div class="nav-icons">
+          <button class="icon-btn" onclick="openCart()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+            <span class="cart-badge" style="display: none;">0</span>
+          </button>
+          <button class="mobile-menu-btn" style="display: none; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-main); margin-left: 10px;" onclick="document.querySelector('.nav-links').classList.toggle('active')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Banner Area -->
+  <section class="banner-area">
+    <div class="container">
+      <div class="banner-row">
+        <div class="banner-content">
+          <div class="slogan-container">
+            <span class="slogan-text" id="typewriter-slogan"></span><span class="typing-cursor">|</span>
+          </div>
+          <p>Elevate your daily wardrobe with curated fashion pieces crafted for elegance, comfort, and style. Experience premium islandwide delivery.</p>
+          <div class="add-bag">
+            <a class="add-btn" href="/products">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </a>
+            <span class="add-text">Shop Collection</span>
+          </div>
+        </div>
+        <div class="banner-img">
+          <!-- We can use a nice hero image or one of the placeholders -->
+          <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&auto=format&fit=crop&q=80" style="border-radius: 5px; box-shadow: 0 20px 40px rgba(0,0,0,0.1);" alt="FelliRo Fashion Collection">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Area -->
+  <section class="features-area container">
+    <div class="features-inner">
+      <div class="single-feature reveal">
+        <div class="f-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+        </div>
+        <h6>Islandwide Delivery</h6>
+        <p>Fast delivery across Sri Lanka</p>
+      </div>
+      <div class="single-feature reveal">
+        <div class="f-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+        </div>
+        <h6>Return Policy</h6>
+        <p>Hassle-free 7 day returns</p>
+      </div>
+      <div class="single-feature reveal">
+        <div class="f-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg>
+        </div>
+        <h6>24/7 Support</h6>
+        <p>Dedicated WhatsApp Support</p>
+      </div>
+      <div class="single-feature reveal">
+        <div class="f-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+        </div>
+        <h6>Secure Payment</h6>
+        <p>100% safe & trusted</p>
+      </div>
+    </div>
+  </section>
+
+
+
+  <!-- Product Area -->
+  <section class="product-area">
+    <div class="container">
+      <div class="section-title reveal">
+        <h1>Trending Now</h1>
+        <p>The most coveted pieces chosen by our style curators.</p>
+      </div>
+      <div class="product-grid" id="trending-grid">
+        <!-- JS populates this -->
+        <div style="grid-column: 1/-1; text-align: center;">Loading collection...</div>
+      </div>
+      <div style="text-align: center; margin-top: 40px;">
+        <a href="/products" class="btn-primary">View All Styles</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Cart Drawer -->
+  <div class="cart-drawer-overlay" id="cart-drawer-overlay">
+    <div class="cart-drawer">
+      <div class="cart-header">
+        <h2>Your Shopping Bag</h2>
+        <button class="cart-close" onclick="closeCart()">✕</button>
+      </div>
+      <div class="cart-body" id="cart-items-container">
+        <!-- Cart Items JS -->
+      </div>
+      <div class="cart-footer">
+        <div class="checkout-form">
+          <input type="text" id="checkout-name" placeholder="Full Name *" required>
+          <input type="email" id="checkout-email" placeholder="Email Address (Optional)">
+          <input type="tel" id="checkout-phone" placeholder="Phone Number *" required>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <select id="checkout-province" onchange="window.updateDistricts()" required>
+              <option value="">Province *</option>
+            </select>
+            <select id="checkout-district" onchange="window.updateDeliveryFee()" required>
+              <option value="">District *</option>
+            </select>
+          </div>
+          <input type="text" id="checkout-address" placeholder="Delivery Address *" required>
+        </div>
+        <div class="cart-summary-line">
+          <span style="color: var(--text-muted);">Subtotal</span>
+          <span id="cart-subtotal">Rs. 0.00</span>
+        </div>
+        <div class="cart-summary-line">
+          <span style="color: var(--text-muted);">Delivery Charge</span>
+          <span id="cart-delivery">Rs. 0.00</span>
+        </div>
+        <div class="cart-total">
+          <span>Total</span>
+          <span id="cart-grand-total">Rs. 0.00</span>
+        </div>
+        <button class="btn-whatsapp" style="width: 100%; margin-top: 15px;" onclick="checkoutWhatsApp()">
+          Checkout via WhatsApp
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="karma-footer">
+    <div class="container">
+      <div class="footer-logo">FelliRo</div>
+      <p class="footer-text">Premium Sri Lankan Clothing Brand. Setting the standard for elegance and quality in modern fashion.</p>
+      <div style="font-size: 13px; color: #555;">&copy; 2026 FelliRo. All Rights Reserved.</div>
+    </div>
+  </footer>
+
+  <script src="/js/store.js?v=new1"></script>
+  <script>
+    // Fetch top 4 products for Landing Page
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const res = await fetch('/api/products');
+        const data = await res.json();
+        if (data.success) {
+          const grid = document.getElementById('trending-grid');
+          const topProducts = data.products.slice(0, 4);
+          
+          grid.innerHTML = topProducts.map(p => {
+            const img = p.primary_image ? p.primary_image : 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=800';
+            return `
+              <div class="single-product reveal" onclick="window.location.href='/products'">
+                <div class="product-img-wrapper product-img-holder">
+                  <img src="${img}" alt="${p.name}">
+                  <div class="hover-gradient"></div>
+                </div>
+                <div class="product-details">
+                  <h6>${p.name}</h6>
+                  <div class="price">${formatLKR(p.price)}</div>
+                </div>
+              </div>
+            `;
+          }).join('');
+          if (window.observeReveals) window.observeReveals();
+        }
+      } catch(e) {
+        console.error("Error loading products:", e);
+      }
+    });
+
+    // Loading screen remove
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        const loader = document.getElementById('felli-loader');
+        if (loader) {
+          loader.classList.add('fade-out');
+          setTimeout(() => loader.remove(), 600);
+        }
+      }, 500);
+    });
+
+    // Typewriter effect
+    document.addEventListener('DOMContentLoaded', () => {
+      const sloganText = "FOR A BETTER VERSION OF YOU.";
+      const sloganEl = document.getElementById('typewriter-slogan');
+      if (sloganEl) {
+        let i = 0;
+        function typeWriter() {
+          if (i < sloganText.length) {
+            let char = sloganText.charAt(i);
+            if (i >= 6 && i < 20) {
+              sloganEl.innerHTML += `<span style="color: var(--primary);">${char}</span>`;
+            } else {
+              sloganEl.innerHTML += `<span style="color: var(--text-main);">${char}</span>`;
+            }
+            i++;
+            setTimeout(typeWriter, 60);
+          }
+        }
+        setTimeout(typeWriter, 500);
+      }
+    });
+  </script>
+</body>
+</html>

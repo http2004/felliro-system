@@ -1,0 +1,2045 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Chats & WhatsApp CRM - FelliRo Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="/socket.io/socket.io.js"></script>
+  <link rel="icon" href="/images/logo.png" type="image/png">
+  <link rel="stylesheet" href="/css/main.css?v=20260802_chats">
+  <style>
+    /* Chat & CRM Horizon Extensions */
+    .hz-crm-grid {
+      display: grid;
+      grid-template-columns: 340px 1fr 310px;
+      gap: 1.25rem;
+      height: calc(100vh - 135px);
+      min-height: 560px;
+    }
+
+    @media (max-width: 1300px) {
+      .hz-crm-grid {
+        grid-template-columns: 300px 1fr 280px;
+        gap: 1rem;
+      }
+    }
+
+    @media (max-width: 1024px) {
+      .hz-crm-grid {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+    }
+
+    /* Column 1: Conversations Sidebar */
+    .hz-chat-sidebar-card {
+      background: #FFFFFF;
+      border-radius: 20px;
+      border: 1px solid var(--hz-border);
+      box-shadow: 0 18px 40px rgba(112, 144, 176, 0.08);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .hz-chat-search-wrap {
+      padding: 1.1rem 1.1rem 0.6rem 1.1rem;
+    }
+
+    .hz-chat-tabs {
+      display: flex;
+      gap: 4px;
+      padding: 0 1.1rem 0.8rem 1.1rem;
+      border-bottom: 1px solid var(--hz-border);
+      overflow-x: auto;
+    }
+
+    .hz-chat-tab {
+      background: #F4F7FE;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--hz-gray-sub);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: var(--hz-transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .hz-chat-tab:hover {
+      background: #E2E8F0;
+      color: var(--hz-navy);
+    }
+
+    .hz-chat-tab.active {
+      background: var(--hz-brand);
+      color: #FFFFFF;
+      box-shadow: 0 4px 12px rgba(67, 24, 255, 0.25);
+    }
+
+    .hz-conv-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.5rem 0.6rem;
+    }
+
+    .hz-conv-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 0.85rem 0.9rem;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-bottom: 4px;
+      border: 1px solid transparent;
+      background: #FFFFFF;
+    }
+
+    .hz-conv-card:hover {
+      background: #F8FAFC;
+      transform: translateY(-1px);
+    }
+
+    .hz-conv-card.active {
+      background: #F4F7FE;
+      border-color: rgba(67, 24, 255, 0.25);
+      box-shadow: 0 4px 16px rgba(67, 24, 255, 0.08);
+    }
+
+    .hz-conv-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: #F4F7FE;
+      color: var(--hz-brand);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-weight: 800;
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      transition: var(--hz-transition);
+    }
+
+    .hz-conv-card.active .hz-conv-avatar {
+      background: linear-gradient(135deg, #4318FF 0%, #7551FF 100%);
+      color: #FFFFFF;
+      border-color: transparent;
+    }
+
+    .hz-conv-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .hz-conv-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2px;
+    }
+
+    .hz-conv-phone {
+      font-weight: 800;
+      color: var(--hz-navy);
+      font-size: 0.86rem;
+      letter-spacing: -0.2px;
+    }
+
+    .hz-conv-time {
+      font-size: 0.72rem;
+      color: #A3AED0;
+      font-weight: 600;
+    }
+
+    .hz-conv-name {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--hz-gray-sub);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 3px;
+    }
+
+    .hz-conv-preview {
+      font-size: 0.76rem;
+      color: #707EAE;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.3;
+    }
+
+    .hz-conv-badges {
+      display: flex;
+      gap: 4px;
+      margin-top: 6px;
+      flex-wrap: wrap;
+    }
+
+    /* Column 2: Live Chat Room */
+    .hz-chat-main-card {
+      background: #FFFFFF;
+      border-radius: 20px;
+      border: 1px solid var(--hz-border);
+      box-shadow: 0 18px 40px rgba(112, 144, 176, 0.08);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .hz-chat-room-header {
+      padding: 0.9rem 1.4rem;
+      border-bottom: 1px solid var(--hz-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #FFFFFF;
+    }
+
+    .hz-chat-stream {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.25rem 1.4rem;
+      background: #F8FAFC;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .hz-date-divider {
+      text-align: center;
+      margin: 0.8rem 0;
+      position: relative;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #A3AED0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .hz-date-divider::before,
+    .hz-date-divider::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      width: calc(50% - 60px);
+      height: 1px;
+      background: var(--hz-border);
+    }
+    .hz-date-divider::before { left: 0; }
+    .hz-date-divider::after { right: 0; }
+
+    /* Bubbles */
+    .hz-msg-group {
+      display: flex;
+      flex-direction: column;
+      max-width: 75%;
+    }
+
+    .hz-msg-incoming {
+      align-self: flex-start;
+    }
+
+    .hz-msg-outgoing {
+      align-self: flex-end;
+    }
+
+    .hz-msg-bubble {
+      padding: 0.85rem 1.1rem;
+      border-radius: 18px;
+      font-size: 0.88rem;
+      line-height: 1.45;
+      word-break: break-word;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    .hz-msg-incoming .hz-msg-bubble {
+      background: #FFFFFF;
+      color: var(--hz-navy);
+      border: 1px solid var(--hz-border);
+      border-bottom-left-radius: 4px;
+    }
+
+    .hz-msg-outgoing .hz-msg-bubble {
+      background: linear-gradient(135deg, #4318FF 0%, #7551FF 100%);
+      color: #FFFFFF;
+      border-bottom-right-radius: 4px;
+    }
+
+    .hz-msg-outgoing.admin-message .hz-msg-bubble {
+      background: #1B2559;
+      color: #FFFFFF;
+    }
+
+    .hz-msg-footer {
+      font-size: 0.7rem;
+      color: #A3AED0;
+      font-weight: 600;
+      margin-top: 4px;
+      padding: 0 4px;
+      display: flex;
+      gap: 6px;
+    }
+
+    .hz-msg-outgoing .hz-msg-footer {
+      align-self: flex-end;
+    }
+
+    .hz-bubble-img {
+      max-width: 240px;
+      max-height: 240px;
+      border-radius: 12px;
+      object-fit: cover;
+      cursor: pointer;
+      display: block;
+      transition: transform 0.2s ease;
+    }
+
+    .hz-bubble-img:hover {
+      transform: scale(1.02);
+    }
+
+    .hz-pdf-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 8px 12px;
+      border-radius: 12px;
+      color: var(--hz-navy);
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.8rem;
+      border: 1px solid var(--hz-border);
+      margin-top: 4px;
+    }
+
+    .hz-pdf-card:hover {
+      background: #FFFFFF;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+
+    /* Bottom Input Bar */
+    .hz-chat-bottom-bar {
+      padding: 0.8rem 1.2rem;
+      border-top: 1px solid var(--hz-border);
+      background: #FFFFFF;
+    }
+
+    .hz-template-row {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      margin-bottom: 6px;
+    }
+
+    .hz-template-chip {
+      background: #F4F7FE;
+      border: 1px solid var(--hz-border);
+      padding: 5px 12px;
+      border-radius: 16px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: var(--hz-navy);
+      cursor: pointer;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: var(--hz-transition);
+    }
+
+    .hz-template-chip:hover {
+      background: var(--hz-brand);
+      color: #FFFFFF;
+      border-color: var(--hz-brand);
+    }
+
+    .hz-chat-input-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+    }
+
+    .hz-chat-textarea {
+      flex: 1;
+      border: 1px solid var(--hz-border);
+      background: #F8FAFC;
+      border-radius: 16px;
+      padding: 9px 14px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 0.88rem;
+      color: var(--hz-navy);
+      resize: none;
+      outline: none;
+      line-height: 1.4;
+      max-height: 120px;
+      transition: var(--hz-transition);
+    }
+
+    .hz-chat-textarea:focus {
+      background: #FFFFFF;
+      border-color: var(--hz-brand);
+      box-shadow: 0 0 0 3px rgba(67, 24, 255, 0.1);
+    }
+
+    .hz-chat-attach-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: #F4F7FE;
+      color: var(--hz-gray-sub);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: var(--hz-transition);
+      flex-shrink: 0;
+    }
+
+    .hz-chat-attach-btn:hover {
+      background: #E2E8F0;
+      color: var(--hz-navy);
+    }
+
+    .hz-chat-send-btn {
+      background: linear-gradient(135deg, #4318FF 0%, #7551FF 100%);
+      color: #FFFFFF;
+      border: none;
+      border-radius: 14px;
+      padding: 0 18px;
+      height: 40px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: var(--hz-transition);
+      flex-shrink: 0;
+      box-shadow: 0 4px 14px rgba(67, 24, 255, 0.25);
+    }
+
+    .hz-chat-send-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(67, 24, 255, 0.35);
+    }
+
+    /* Column 3: CRM Details Sidebar */
+    .hz-crm-details-card {
+      background: #FFFFFF;
+      border-radius: 20px;
+      border: 1px solid var(--hz-border);
+      box-shadow: 0 18px 40px rgba(112, 144, 176, 0.08);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow-y: auto;
+      padding: 1.25rem;
+      gap: 1.2rem;
+    }
+
+    .hz-crm-widget {
+      background: #F8FAFC;
+      border: 1px solid var(--hz-border);
+      border-radius: 16px;
+      padding: 1.1rem;
+    }
+
+    .hz-crm-widget-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 800;
+      color: var(--hz-navy);
+      margin-bottom: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .hz-crm-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 6px;
+      font-size: 0.78rem;
+    }
+
+    .hz-crm-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .hz-crm-key {
+      color: #A3AED0;
+      font-weight: 600;
+    }
+
+    .hz-crm-val {
+      color: var(--hz-navy);
+      font-weight: 700;
+      text-align: right;
+      max-width: 60%;
+      word-break: break-word;
+    }
+
+    .hz-crm-order-mini {
+      background: #FFFFFF;
+      border: 1px solid var(--hz-border);
+      border-radius: 12px;
+      padding: 0.75rem 0.85rem;
+      margin-bottom: 8px;
+    }
+
+    .hz-crm-order-mini:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Status Badges */
+    .hz-badge-bot {
+      background: #EFF6FF;
+      color: #3B82F6;
+      border: 1px solid #DBEAFE;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 0.72rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .hz-badge-human {
+      background: #FFFBEB;
+      color: #D97706;
+      border: 1px solid #FDE68A;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 0.72rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .hz-badge-order {
+      background: #E6FAF5;
+      color: #01B574;
+      border: 1px solid #A7F3D0;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 0.72rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    /* Toggle Switch */
+    .hz-toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+
+    .hz-toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .hz-toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #CBD5E1;
+      border-radius: 999px;
+      transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .hz-toggle-slider:before {
+      position: absolute;
+      content: '';
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .hz-toggle-switch input:checked + .hz-toggle-slider {
+      background: #01B574;
+    }
+
+    .hz-toggle-switch input:checked + .hz-toggle-slider:before {
+      transform: translateX(20px);
+    }
+  </style>
+</head>
+
+<body class="hz-body">
+
+  <div class="hz-layout" id="admin-chats-view">
+    <!-- Horizon Sidebar -->
+    <aside class="hz-sidebar">
+      <div class="hz-sidebar-brand">
+        <img src="/images/logo.png" alt="FelliRo" style="height: 32px; max-width: 145px; object-fit: contain;">
+        <span class="hz-sidebar-brand-badge">ADMIN</span>
+      </div>
+
+      <ul class="hz-sidebar-nav">
+        <li class="hz-nav-item">
+          <a href="/admin/dashboard" class="hz-nav-link">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="7" height="9" x="3" y="3" rx="1" />
+              <rect width="7" height="5" x="14" y="3" rx="1" />
+              <rect width="7" height="9" x="14" y="12" rx="1" />
+              <rect width="7" height="5" x="3" y="16" rx="1" />
+            </svg>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li class="hz-nav-item">
+          <a href="/admin/products" class="hz-nav-link">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m7.5 4.27 9 5.15" />
+              <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+              <path d="m3.3 7 8.7 5 8.7-5" />
+              <path d="M12 22V12" />
+            </svg>
+            <span>Inventory & Stock</span>
+          </a>
+        </li>
+        <li class="hz-nav-item">
+          <a href="/admin/orders" class="hz-nav-link">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="8" cy="21" r="1" />
+              <circle cx="19" cy="21" r="1" />
+              <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
+            </svg>
+            <span>Orders & POS</span>
+          </a>
+        </li>
+        <li class="hz-nav-item">
+          <a href="/admin/returns" class="hz-nav-link">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+              <path d="M3 3v5h5" />
+            </svg>
+            <span>Returns Handling</span>
+          </a>
+        </li>
+        <li class="hz-nav-item">
+          <a href="/admin/reports" class="hz-nav-link">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" x2="12" y1="20" y2="10" />
+              <line x1="18" x2="18" y1="20" y2="4" />
+              <line x1="6" x2="6" y1="20" y2="16" />
+            </svg>
+            <span>Sales Reports</span>
+          </a>
+        </li>
+        <li class="hz-nav-item">
+          <a href="/admin/chats" class="hz-nav-link active">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
+            </svg>
+            <span>Customer Chats</span>
+          </a>
+        </li>
+        <li class="hz-nav-item" style="margin-top: 1.5rem;">
+          <a href="javascript:void(0)" onclick="adminLogout()" class="hz-nav-link logout">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" x2="9" y1="12" y2="12" />
+            </svg>
+            <span>Logout</span>
+          </a>
+        </li>
+      </ul>
+
+      <!-- Sidebar Promo Card -->
+      <div class="hz-sidebar-promo">
+        <div class="hz-sidebar-promo-title">FelliRo AI Assistant Pro</div>
+        <div class="hz-sidebar-promo-desc">Smart automated sales, inventory reservation & instant answers.</div>
+        <a href="javascript:void(0)" onclick="openQrModal()" style="font-size: 0.75rem; font-weight: 700; color: #FFFFFF; text-decoration: underline;">Scan WhatsApp QR &rarr;</a>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="hz-main" style="padding-bottom: 1rem;">
+      <!-- Top Floating Navbar -->
+      <header class="hz-navbar">
+        <div>
+          <div class="hz-breadcrumbs"><a href="/admin/dashboard">Pages</a> / <span>Customer Chats</span></div>
+          <h1 class="hz-page-title">Customer Chats & WhatsApp CRM</h1>
+        </div>
+
+        <div class="hz-navbar-actions">
+          <!-- AI Bot On/Off Switch -->
+          <div style="display: flex; align-items: center; gap: 8px; background: #FFFFFF; padding: 5px 12px; border-radius: 14px; border: 1px solid var(--hz-border);">
+            <span style="font-size: 0.8rem; font-weight: 700; color: var(--hz-navy);" id="bot-label">Shasha AI Bot: Active</span>
+            <label class="hz-toggle-switch" title="Toggle AI Bot automated replies">
+              <input type="checkbox" id="bot-toggle" onchange="handleBotToggle(this.checked)">
+              <span class="hz-toggle-slider"></span>
+            </label>
+          </div>
+
+          <!-- WhatsApp Status Badge -->
+          <div id="wa-status-badge" class="hz-wa-badge" onclick="openQrModal()" title="Click to view WhatsApp connection QR">
+            <div id="wa-status-dot" class="hz-status-dot"></div>
+            <span id="wa-status-text">Baileys Engine</span>
+          </div>
+
+          <!-- QR / Session Modal Button -->
+          <button class="hz-btn-pill hz-btn-secondary" onclick="openQrModal()" title="Open WhatsApp Web QR Code Modal">
+            <svg style="width: 15px; height: 15px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="14" height="20" x="5" y="2" rx="2" ry="2" />
+              <path d="M12 18h.01" />
+            </svg>
+            QR / Session
+          </button>
+
+          <!-- Refresh Chats Button -->
+          <button class="hz-btn-pill hz-btn-secondary" onclick="loadChats()" title="Refresh conversations">
+            <svg style="width: 15px; height: 15px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+              <path d="M21 3v5h-5" />
+              <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+              <path d="M8 16H3v5" />
+            </svg>
+          </button>
+
+          <!-- Clear All Chats Button -->
+          <button class="hz-btn-pill" onclick="confirmClearAllChats()" style="background: #FEEFEF; color: #EE5D50; border: 1px solid #FCD3D3;" title="Clear all chat history from DB">
+            <svg style="width: 15px; height: 15px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6h18" />
+              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+            </svg>
+            Clear All
+          </button>
+        </div>
+      </header>
+
+      <!-- 3-Column Luxury Horizon CRM Grid -->
+      <div class="hz-crm-grid">
+
+        <!-- Column 1: Conversations List Card -->
+        <div class="hz-chat-sidebar-card">
+          <!-- Live Search Box -->
+          <div class="hz-chat-search-wrap">
+            <div class="hz-search-box" style="width: 100%;">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" x2="16.65" y1="21" y2="16.65" />
+              </svg>
+              <input type="text" id="chat-search" class="hz-search-input" placeholder="Search phone, name, order..." oninput="handleSearch(this.value)">
+            </div>
+          </div>
+
+          <!-- Filter Tabs -->
+          <div class="hz-chat-tabs">
+            <button class="hz-chat-tab active" onclick="setFilter('all', this)">All Chats</button>
+            <button class="hz-chat-tab" onclick="setFilter('bot', this)">
+              <svg style="width: 12px; height: 12px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+              Bot
+            </button>
+            <button class="hz-chat-tab" onclick="setFilter('human', this)">
+              <svg style="width: 12px; height: 12px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              Human
+            </button>
+            <button class="hz-chat-tab" onclick="setFilter('orders', this)">
+              <svg style="width: 12px; height: 12px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+              Orders
+            </button>
+          </div>
+
+          <!-- Conversations Scroll List -->
+          <div class="hz-conv-list" id="chat-list">
+            <div style="padding: 3rem 1rem; text-align: center; color: #A3AED0; font-size: 0.85rem;">
+              No active conversations
+            </div>
+          </div>
+        </div>
+
+        <!-- Column 2: Live Chat Room Card -->
+        <div class="hz-chat-main-card">
+          <!-- Empty State -->
+          <div id="chat-empty" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #A3AED0; text-align: center; padding: 2rem;">
+            <div style="width: 64px; height: 64px; border-radius: 20px; background: #F4F7FE; color: var(--hz-brand); display: flex; align-items: center; justify-content: center; margin-bottom: 1.2rem;">
+              <svg style="width: 32px; height: 32px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
+              </svg>
+            </div>
+            <h3 style="font-weight: 800; color: var(--hz-navy); margin-bottom: 6px; font-size: 1.2rem;">Select a Conversation</h3>
+            <p style="font-size: 0.85rem; max-width: 300px; color: var(--hz-gray-sub); line-height: 1.5;">Choose a phone number from the left conversation list to view live chat or take over from AI.</p>
+          </div>
+
+          <!-- Active Header -->
+          <div class="hz-chat-room-header" id="chat-header" style="display: none;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div class="hz-conv-avatar" id="header-avatar">
+                <svg style="width: 18px; height: 18px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                </svg>
+              </div>
+              <div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span id="header-phone" style="font-weight: 800; color: var(--hz-navy); font-size: 0.95rem;">07X XXX XXXX</span>
+                  <span class="hz-badge-bot" id="header-badge">Bot</span>
+                </div>
+                <div id="header-name" style="font-size: 0.78rem; font-weight: 600; color: var(--hz-gray-sub);">Customer Name</div>
+              </div>
+            </div>
+
+            <!-- Header Actions -->
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <button class="hz-btn-pill" id="btn-ai-order" onclick="openAiPosModal(activePhone)" style="background: linear-gradient(135deg, #4318FF 0%, #7551FF 100%); color: #FFFFFF; border: none; font-weight: 700; box-shadow: 0 4px 14px rgba(67, 24, 255, 0.25);" title="Extract customer details and items with AI to create order">
+                <svg style="width: 13px; height: 13px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+                </svg>
+                ✨ 1-Click AI Order
+              </button>
+
+              <button class="hz-btn-pill" id="btn-takeover" onclick="assignToHuman()" style="background: #FFFBEB; color: #D97706; border: 1px solid #FDE68A;" title="Take over conversation from AI">
+                <svg style="width: 13px; height: 13px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                Take Over
+              </button>
+
+              <button class="hz-btn-pill" id="btn-returnbot" onclick="assignToBot()" style="background: #EFF6FF; color: #3B82F6; border: 1px solid #DBEAFE; display: none;" title="Return conversation to AI Bot">
+                <svg style="width: 13px; height: 13px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 8V4H8" />
+                  <rect width="16" height="12" x="4" y="8" rx="2" />
+                  <path d="M2 14h2" />
+                  <path d="M20 14h2" />
+                  <path d="M15 13v2" />
+                  <path d="M9 13v2" />
+                </svg>
+                Return to Bot
+              </button>
+
+              <button class="hz-btn-pill hz-btn-secondary" onclick="resetCustomerSession()" title="Reset session state & cart">
+                <svg style="width: 13px; height: 13px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                  <path d="M21 3v5h-5" />
+                  <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                  <path d="M8 16H3v5" />
+                </svg>
+                Reset
+              </button>
+
+              <button class="hz-btn-pill" onclick="deleteActiveChat()" style="background: #FEEFEF; color: #EE5D50; border: 1px solid #FCD3D3;" title="Delete this conversation history">
+                <svg style="width: 13px; height: 13px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 6h18" />
+                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Messages Stream -->
+          <div class="hz-chat-stream" id="chat-stream" style="display: none;"></div>
+
+          <!-- Bottom Typing & Quick Action Bar -->
+          <div class="hz-chat-bottom-bar" id="chat-bottom-bar" style="display: none;">
+            <!-- Quick Response Template Chips -->
+            <div class="hz-template-row">
+              <div class="hz-template-chip" onclick="insertQuickReply('bank')">
+                <svg style="width: 12px; height: 12px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect width="20" height="14" x="2" y="5" rx="2" />
+                  <line x1="2" x2="22" y1="10" y2="10" />
+                </svg>
+                Bank Details
+              </div>
+              <div class="hz-template-chip" onclick="insertQuickReply('delivery')">
+                <svg style="width: 12px; height: 12px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2" />
+                  <path d="M15 18H9" />
+                  <path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14" />
+                  <circle cx="17" cy="18" r="2" />
+                  <circle cx="7" cy="18" r="2" />
+                </svg>
+                Courier Info
+              </div>
+              <div class="hz-template-chip" onclick="insertQuickReply('catalog')">
+                <svg style="width: 12px; height: 12px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m7.5 4.27 9 5.15" />
+                  <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+                  <path d="m3.3 7 8.7 5 8.7-5" />
+                  <path d="M12 22V12" />
+                </svg>
+                Recommend Items
+              </div>
+              <div class="hz-template-chip" onclick="insertQuickReply('confirm')">
+                <svg style="width: 12px; height: 12px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                Payment Received
+              </div>
+              <div class="hz-template-chip" onclick="insertQuickReply('support')">
+                <svg style="width: 12px; height: 12px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                  <line x1="12" x2="12.01" y1="17" y2="17" />
+                </svg>
+                How can I help?
+              </div>
+            </div>
+
+            <!-- Attachment File Preview -->
+            <div id="file-attachment-preview" style="display: none; background: #F4F7FE; border-radius: 10px; padding: 6px 12px; font-size: 0.8rem; align-items: center; justify-content: space-between; margin-bottom: 8px; border: 1px solid var(--hz-border);">
+              <span id="file-preview-name" style="display: flex; align-items: center; gap: 6px; font-weight: 700; color: var(--hz-navy);">
+                <svg style="width: 14px; height: 14px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                </svg>
+                attached-file.jpg
+              </span>
+              <button onclick="clearAttachment()" style="background: none; border: none; color: #EE5D50; font-weight: 800; cursor: pointer;">✕</button>
+            </div>
+
+            <!-- Input & Actions Row -->
+            <div class="hz-chat-input-row">
+              <label class="hz-chat-attach-btn" title="Attach Image or Document">
+                <svg style="width: 18px; height: 18px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                </svg>
+                <input type="file" id="chat-file-input" style="display: none;" accept="image/*,application/pdf" onchange="handleFileSelected(this)">
+              </label>
+
+              <textarea class="hz-chat-textarea" id="chat-input" placeholder="Type message as FelliRo Team (Enter to send, Shift+Enter for newline)..." rows="1" onkeydown="handleKey(event)" oninput="autoExpand(this)"></textarea>
+
+              <button class="hz-chat-send-btn" onclick="sendAdminMessage()">
+                <span>Send</span>
+                <svg style="width: 14px; height: 14px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="22" x2="11" y1="2" y2="13" />
+                  <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Column 3: Customer & Order CRM Details Card -->
+        <div class="hz-crm-details-card" id="crm-sidebar">
+          <div style="text-align: center; color: #A3AED0; padding: 3rem 0;">
+            <div style="width: 48px; height: 48px; border-radius: 14px; background: #F4F7FE; color: var(--hz-brand); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.8rem auto;">
+              <svg style="width: 24px; height: 24px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
+              </svg>
+            </div>
+            <p style="font-size: 0.85rem; font-weight: 600;">Customer profile and order history will appear here.</p>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- WhatsApp QR Code Modal -->
+  <div class="modal-overlay" id="qr-modal">
+    <div class="hz-modal-card" style="text-align: center; max-width: 440px;">
+      <div class="hz-modal-header">
+        <h3 class="hz-modal-title" style="display: flex; align-items: center; gap: 8px;">
+          <svg style="width: 20px; height: 20px; color: var(--hz-brand);" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="14" height="20" x="5" y="2" rx="2" ry="2" />
+            <path d="M12 18h.01" />
+          </svg>
+          WhatsApp Connection
+        </h3>
+        <button class="hz-modal-close" onclick="closeModal('qr-modal')">✕</button>
+      </div>
+
+      <div id="qr-display" style="min-height: 240px; display: flex; align-items: center; justify-content: center; background: #F8FAFC; border-radius: 16px; padding: 1rem; border: 1px dashed var(--hz-border);">
+        <div style="color: var(--hz-gray-sub); font-weight: 600;">Loading QR Code...</div>
+      </div>
+
+      <div style="margin-top: 1.2rem; font-size: 0.8rem; color: var(--hz-gray-sub); line-height: 1.5;">
+        Open WhatsApp on phone &rarr; <strong>Linked Devices</strong> &rarr; <strong>Link a Device</strong> &rarr; Scan this QR code.
+      </div>
+
+      <div style="margin-top: 1.2rem; display: flex; gap: 0.8rem; justify-content: center;">
+        <button class="hz-btn-pill" style="background: #F1F5F9; color: var(--hz-navy);" onclick="closeModal('qr-modal')">Close</button>
+        <button class="hz-btn-pill hz-btn-primary" onclick="forceRestartBotInChat()">Force Restart</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Image Lightbox Modal -->
+  <div class="modal-overlay" id="lightbox-modal" onclick="closeModal('lightbox-modal')">
+    <div style="max-width: 800px; max-height: 90vh; padding: 10px;" onclick="event.stopPropagation()">
+      <img id="lightbox-img" src="" style="max-width: 100%; max-height: 85vh; border-radius: 16px; box-shadow: 0 25px 50px rgba(0,0,0,0.4);">
+    </div>
+  </div>
+
+  <!-- POS / AI Order Modal with Cart -->
+  <div class="modal-overlay" id="pos-modal">
+    <div class="hz-modal-card" style="max-width: 860px; max-height: 90vh; overflow-y: auto;">
+      <div class="hz-modal-header">
+        <div>
+          <div style="font-size: 0.75rem; font-weight: 700; color: var(--hz-brand); text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
+            <svg style="width: 14px; height: 14px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+            AI Assisted Order System
+          </div>
+          <h3 class="hz-modal-title">1-Click Order Creation (Bank Transfer)</h3>
+        </div>
+        <button type="button" class="hz-modal-close" onclick="closeModal('pos-modal')">✕</button>
+      </div>
+
+      <!-- Smart AI Paste Input Box -->
+      <div style="background: linear-gradient(135deg, rgba(67, 24, 255, 0.05) 0%, rgba(117, 81, 255, 0.08) 100%); border: 1.5px dashed rgba(67, 24, 255, 0.25); border-radius: 14px; padding: 12px 16px; margin-bottom: 1.2rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+          <label class="hz-form-label" style="margin-bottom: 0; color: var(--hz-brand); font-weight: 700; display: flex; align-items: center; gap: 6px; font-size: 0.82rem;">
+            <svg style="width: 14px; height: 14px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+            Paste Raw Message / Notes (Optional AI Smart Parse)
+          </label>
+          <span style="font-size: 0.72rem; color: var(--hz-gray-sub);">Auto-extracts customer details & items</span>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <textarea id="pos-smart-paste-input" class="hz-form-textarea" rows="2" placeholder="Paste customer chat text or notes here to re-analyze with AI..." style="background: #FFFFFF; font-size: 0.82rem; margin-bottom: 0; border: 1px solid #CBD5E1;"></textarea>
+          <button type="button" class="hz-btn-pill hz-btn-primary" onclick="parseSmartTextWithAi()" style="white-space: nowrap; height: fit-content; align-self: flex-end; padding: 0.6rem 1rem; font-size: 0.8rem; background: linear-gradient(135deg, #4318FF 0%, #7551FF 100%);">
+            🪄 Parse with AI
+          </button>
+        </div>
+      </div>
+
+      <form id="pos-form" onsubmit="handlePosSubmit(event)">
+        <!-- Customer Details Grid -->
+        <div class="hz-grid-2" style="margin-bottom: 0.8rem;">
+          <div class="hz-form-group">
+            <label class="hz-form-label">Customer Name *</label>
+            <input type="text" id="pos-customer-name" class="hz-form-input" required placeholder="e.g. Kasun Silva">
+          </div>
+          <div class="hz-form-group">
+            <label class="hz-form-label">Phone Number *</label>
+            <input type="text" id="pos-customer-phone" class="hz-form-input" required placeholder="0771234567">
+          </div>
+        </div>
+
+        <div class="hz-form-group">
+          <label class="hz-form-label">Full Delivery Address *</label>
+          <textarea id="pos-customer-address" class="hz-form-textarea" rows="2" required placeholder="123 Main Street, City"></textarea>
+        </div>
+
+        <div class="hz-grid-2" style="margin-bottom: 0.8rem;">
+          <div class="hz-form-group">
+            <label class="hz-form-label">Province *</label>
+            <select id="pos-province" class="hz-form-select" onchange="onPosProvinceChange()" required>
+              <option value="Western" selected>Western Province</option>
+              <option value="Central">Central Province</option>
+              <option value="Southern">Southern Province</option>
+              <option value="Northern">Northern Province</option>
+              <option value="Eastern">Eastern Province</option>
+              <option value="North Western">North Western Province</option>
+              <option value="North Central">North Central Province</option>
+              <option value="Uva">Uva Province</option>
+              <option value="Sabaragamuwa">Sabaragamuwa Province</option>
+            </select>
+          </div>
+          <div class="hz-form-group">
+            <label class="hz-form-label">District / City *</label>
+            <select id="pos-city" class="hz-form-select" onchange="onPosDistrictChange()" required>
+              <!-- Loaded dynamically via JS -->
+            </select>
+          </div>
+        </div>
+
+        <!-- Payment Method Notice -->
+        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 8px 12px; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--hz-navy); font-weight: 600;">
+            <svg style="width: 16px; height: 16px; color: #01B574;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+            Payment Method: <span style="color: #01B574; font-weight: 700;">Bank Transfer (Strict)</span>
+          </div>
+          <span style="font-size: 0.72rem; color: var(--hz-gray-sub);">COD is not available</span>
+        </div>
+
+        <!-- Add Items Box -->
+        <div class="hz-pos-box" style="margin-bottom: 1rem;">
+          <label class="hz-form-label" style="color: var(--hz-brand); display: flex; align-items: center; gap: 8px; font-size: 0.88rem; margin-bottom: 0.6rem;">
+            <svg style="width: 16px; height: 16px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="9" cy="21" r="1"></circle>
+              <circle cx="20" cy="21" r="1"></circle>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+            </svg>
+            Order Items
+          </label>
+
+          <input type="text" id="pos-product-search" class="hz-form-input" placeholder="Search product name or SKU..." oninput="filterPosProducts()" style="margin-bottom: 0.6rem; background: #FFFFFF; border: 1.5px solid #E2E8F0; font-size: 0.85rem;">
+          
+          <select id="pos-product-id" class="hz-form-select" size="3" style="height: 90px; margin-bottom: 0.8rem; background: #FFFFFF; border: 1.5px solid #E2E8F0; font-size: 0.85rem;" onchange="onPosProductSelect()">
+            <!-- Loaded dynamically via JS -->
+          </select>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 0.8rem; align-items: end;">
+            <div>
+              <label class="hz-form-label" style="font-size: 0.76rem;">Size *</label>
+              <select id="pos-size" class="hz-form-select" style="background: #FFFFFF; border: 1.5px solid #E2E8F0;" onchange="if(window.updatePosQtyLimit) window.updatePosQtyLimit()">
+                <option value="" disabled selected>Select Product First</option>
+              </select>
+            </div>
+            <div>
+              <label class="hz-form-label" style="font-size: 0.76rem;">Color *</label>
+              <select id="pos-color" class="hz-form-select" style="background: #FFFFFF; border: 1.5px solid #E2E8F0;" onchange="if(window.updatePosQtyLimit) window.updatePosQtyLimit()">
+                <option value="" disabled selected>Select Product First</option>
+              </select>
+            </div>
+            <div>
+              <label class="hz-form-label" style="font-size: 0.76rem;">Qty</label>
+              <input type="number" id="pos-quantity" class="hz-form-input" value="1" min="1" style="background: #FFFFFF; border: 1.5px solid #E2E8F0;" oninput="if(this.max && parseInt(this.value) > parseInt(this.max)) this.value = this.max; if(this.value < 1) this.value = 1;">
+            </div>
+            <div>
+              <button type="button" class="hz-btn-pill hz-btn-primary" onclick="addToPosCart()" style="padding: 0.65rem 1.1rem; white-space: nowrap;">
+                + Add Item
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- POS Cart Table -->
+        <div style="border: 1px solid var(--hz-border); border-radius: 14px; overflow: hidden; margin-bottom: 1.2rem; background: #FFFFFF;">
+          <table class="hz-table" style="margin: 0; font-size: 0.85rem;">
+            <thead>
+              <tr>
+                <th>Item Details</th>
+                <th>Qty</th>
+                <th style="text-align: right;">Unit Price</th>
+                <th style="text-align: right;">Total</th>
+                <th style="width: 40px; text-align: center;"></th>
+              </tr>
+            </thead>
+            <tbody id="pos-cart-body">
+              <tr>
+                <td colspan="5" style="text-align: center; color: var(--hz-gray-sub); padding: 1.2rem;">
+                  Cart is empty. Select items above to add.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div id="pos-cart-summary" class="hz-pos-summary-card">
+            <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 1.2rem; align-items: center;">
+              <div class="hz-form-group" style="margin-bottom: 0;">
+                <label class="hz-form-label" style="color: var(--hz-navy); display: flex; align-items: center; gap: 6px; font-size: 0.8rem;">
+                  <svg style="width: 14px; height: 14px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2" />
+                    <path d="M15 18H9" />
+                    <path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14" />
+                    <circle cx="17" cy="18" r="2" />
+                    <circle cx="7" cy="18" r="2" />
+                  </svg>
+                  Delivery Charge (LKR)
+                </label>
+                <input type="number" id="pos-delivery-fee" class="hz-form-input" value="450" min="0" step="10" placeholder="450" oninput="renderPosCart()" style="background: #FFFFFF; border: 1.5px solid #E2E8F0; font-weight: 700; height: 38px;">
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 0.8rem; color: var(--hz-gray-sub);">Items Subtotal: <span id="pos-subtotal" style="font-weight: 700; color: var(--hz-navy);">LKR 0.00</span></div>
+                <div style="font-size: 0.8rem; color: var(--hz-gray-sub); margin-top: 2px;">Delivery Fee: <span id="pos-delivery-display" style="font-weight: 700; color: var(--hz-navy);">LKR 450.00</span></div>
+                <div style="margin-top: 6px;">
+                  <span style="font-size: 0.82rem; color: var(--hz-gray-sub); font-weight: 600;">Grand Total: </span>
+                  <span id="pos-grand-total" class="hz-pos-grand-total" style="font-size: 1.15rem;">LKR 450.00</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.8rem; padding-top: 0.8rem; border-top: 1px solid var(--hz-border);">
+          <button type="button" class="hz-btn-pill" style="background: #F4F7FE; color: var(--hz-navy);" onclick="closeModal('pos-modal')">Cancel</button>
+          <button type="submit" class="hz-btn-pill hz-btn-primary" id="pos-submit-btn" style="background: linear-gradient(135deg, #4318FF 0%, #7551FF 100%);">Complete & Create Order</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast" class="toast"></div>
+
+  <!-- Script logic -->
+  <script src="/js/admin_v2.js?v=20260802_chats"></script>
+  <script>
+    // ─────────────────────────────────────────────
+    // State Management
+    // ─────────────────────────────────────────────
+    let activePhone = null;
+    let activeCustomerName = '';
+    let allChats = [];
+    let currentFilter = 'all';
+    let selectedFile = null;
+    const socket = io();
+
+    // ─────────────────────────────────────────────
+    // Format Phone for Display
+    // ─────────────────────────────────────────────
+    function formatPhoneDisplay(raw) {
+      if (!raw) return 'Unknown Number';
+      let clean = raw.replace('@lid', '').replace('@s.whatsapp.net', '').replace('@c.us', '').trim();
+
+      // Sri Lankan Local format: 07XXXXXXXX -> 07X XXX XXXX
+      if (clean.startsWith('0') && clean.length === 10) {
+        return `${clean.substring(0, 3)} ${clean.substring(3, 6)} ${clean.substring(6)}`;
+      }
+      // International 947XXXXXXXX -> +94 7X XXX XXXX
+      if (clean.startsWith('94') && clean.length === 11) {
+        return `+94 ${clean.substring(2, 4)} ${clean.substring(4, 7)} ${clean.substring(7)}`;
+      }
+      // Generic formatted spacing
+      if (clean.length === 15) {
+        return `LID: ${clean.substring(0, 5)} ${clean.substring(5, 10)} ${clean.substring(10)}`;
+      }
+      return clean;
+    }
+
+    // ─────────────────────────────────────────────
+    // Socket.io Real-Time Live Sync
+    // ─────────────────────────────────────────────
+    socket.on('connect', () => {
+      console.log('Admin connected to real-time chat socket');
+    });
+
+    socket.on('wa_status', (data) => {
+      updateWaStatusUI(data.status === 'connected');
+    });
+
+    socket.on('wa_qr', (data) => {
+      const qrEl = document.getElementById('qr-display');
+      if (qrEl) {
+        qrEl.innerHTML = `<img src="${data.qr}" alt="WhatsApp QR Code" style="max-width: 240px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">`;
+      }
+    });
+
+    socket.on('bot_status_changed', (data) => {
+      const toggle = document.getElementById('bot-toggle');
+      if (toggle) toggle.checked = !!data.enabled;
+      const botLabel = document.getElementById('bot-label');
+      if (botLabel) botLabel.textContent = data.enabled ? 'Shasha AI Bot: Active' : 'Shasha AI Bot: OFF';
+    });
+
+    socket.on('new_customer_message', (data) => {
+      loadChats(false);
+      const cleanTarget = (data.phone || '').replace('@lid', '').replace('@s.whatsapp.net', '');
+      if (activePhone && cleanTarget === activePhone) {
+        appendBubble({
+          direction: 'incoming',
+          message: data.message,
+          media_url: data.mediaUrl,
+          media_type: data.mediaType,
+          sent_by: 'customer',
+          created_at: data.timestamp || new Date().toISOString()
+        });
+      }
+    });
+
+    socket.on('bot_message_sent', (data) => {
+      const cleanTarget = (data.phone || '').replace('@lid', '').replace('@s.whatsapp.net', '');
+      if (activePhone && cleanTarget === activePhone) {
+        appendBubble({
+          direction: 'outgoing',
+          message: data.message,
+          media_url: data.mediaUrl,
+          media_type: data.mediaType,
+          sent_by: 'bot',
+          created_at: data.timestamp || new Date().toISOString()
+        });
+      }
+    });
+
+    socket.on('admin_message_sent', (data) => {
+      const cleanTarget = (data.phone || '').replace('@lid', '').replace('@s.whatsapp.net', '');
+      if (activePhone && cleanTarget === activePhone) {
+        appendBubble({
+          direction: 'outgoing',
+          message: data.message,
+          media_url: data.mediaUrl,
+          media_type: data.mediaType,
+          sent_by: 'admin',
+          created_at: data.timestamp || new Date().toISOString()
+        });
+      }
+    });
+
+    socket.on('bot_escalated', (data) => {
+      showToast(`Customer ${formatPhoneDisplay(data.phone)} connected to Human Agent!`, 'info');
+      const found = allChats.find(c => (c.phone_number || '').replace('@lid', '') === data.phone);
+      if (found) found.assigned_to_human = 1;
+
+      if (activePhone === data.phone) {
+        const badge = document.getElementById('header-badge');
+        if (badge) {
+          badge.textContent = 'Human';
+          badge.className = 'hz-badge-human';
+        }
+        document.getElementById('btn-takeover').style.display = 'none';
+        document.getElementById('btn-returnbot').style.display = 'inline-flex';
+      }
+      renderConversations();
+    });
+
+    socket.on('chat_status_updated', (data) => {
+      const found = allChats.find(c => (c.phone_number || '').replace('@lid', '') === data.phone);
+      if (found) {
+        found.assigned_to_human = data.assigned_to_human;
+        found.state = data.state || found.state;
+      }
+      if (activePhone === data.phone) {
+        const isHuman = data.assigned_to_human === 1;
+        const badge = document.getElementById('header-badge');
+        if (badge) {
+          badge.textContent = isHuman ? 'Human' : 'Bot';
+          badge.className = isHuman ? 'hz-badge-human' : 'hz-badge-bot';
+        }
+        document.getElementById('btn-takeover').style.display = isHuman ? 'none' : 'inline-flex';
+        document.getElementById('btn-returnbot').style.display = isHuman ? 'inline-flex' : 'none';
+      }
+      renderConversations();
+    });
+
+    socket.on('chat_deleted', (data) => {
+      allChats = allChats.filter(c => (c.phone_number || '').replace('@lid', '') !== data.phone);
+      if (activePhone === data.phone) {
+        activePhone = null;
+        document.getElementById('chat-header').style.display = 'none';
+        document.getElementById('chat-stream').style.display = 'none';
+        document.getElementById('chat-bottom-bar').style.display = 'none';
+        document.getElementById('chat-empty').style.display = 'flex';
+        document.getElementById('crm-sidebar').innerHTML = '<div style="text-align: center; color: #A3AED0; padding: 3rem 0;"><div style="width: 48px; height: 48px; border-radius: 14px; background: #F4F7FE; color: var(--hz-brand); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.8rem auto;"><svg style="width: 24px; height: 24px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/></svg></div><p style="font-size: 0.85rem; font-weight: 600;">Customer profile and order history will appear here.</p></div>';
+      }
+      renderConversations();
+    });
+
+    socket.on('all_chats_cleared', () => {
+      allChats = [];
+      activePhone = null;
+      document.getElementById('chat-header').style.display = 'none';
+      document.getElementById('chat-stream').style.display = 'none';
+      document.getElementById('chat-bottom-bar').style.display = 'none';
+      document.getElementById('chat-empty').style.display = 'flex';
+      document.getElementById('crm-sidebar').innerHTML = '<div style="text-align: center; color: #A3AED0; padding: 3rem 0;"><div style="width: 48px; height: 48px; border-radius: 14px; background: #F4F7FE; color: var(--hz-brand); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.8rem auto;"><svg style="width: 24px; height: 24px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/></svg></div><p style="font-size: 0.85rem; font-weight: 600;">Customer profile and order history will appear here.</p></div>';
+      renderConversations();
+    });
+
+    socket.on('new_order_receipt', (data) => {
+      showToast(`Payment receipt uploaded for Order #${data.orderNumber}!`, 'success');
+      loadChats(false);
+      if (activePhone && data.customerPhone === activePhone) {
+        refreshActiveChat();
+      }
+    });
+
+    socket.on('wa_status', (data) => {
+      loadWaStatus();
+    });
+
+    socket.on('wa_qr', (data) => {
+      const el = document.getElementById('qr-display');
+      if (el && data && data.qr) {
+        el.innerHTML = `<img src="${data.qr}" alt="WhatsApp QR" style="max-width: 240px; border-radius: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">`;
+      }
+    });
+
+    // ─────────────────────────────────────────────
+    // Initial Loader & Status
+    // ─────────────────────────────────────────────
+    async function loadWaStatus() {
+      try {
+        const res = await fetch('/api/whatsapp/status');
+        const data = await res.json();
+        updateWaStatusUI(data.connected);
+        const toggle = document.getElementById('bot-toggle');
+        if (toggle) toggle.checked = !!data.bot_enabled;
+        const botLabel = document.getElementById('bot-label');
+        if (botLabel) botLabel.textContent = data.bot_enabled ? 'Shasha AI Bot: Active' : 'Shasha AI Bot: OFF';
+      } catch (e) { }
+    }
+
+    function updateWaStatusUI(connected) {
+      const dot = document.getElementById('wa-status-dot');
+      const text = document.getElementById('wa-status-text');
+      if (dot && text) {
+        dot.style.background = connected ? '#01B574' : '#EE5D50';
+        dot.style.boxShadow = connected ? '0 0 0 3px rgba(1, 181, 116, 0.25)' : 'none';
+        text.textContent = connected ? 'Baileys Connected' : 'WhatsApp Disconnected';
+      }
+    }
+
+    async function handleBotToggle(enabled) {
+      try {
+        const res = await fetch('/api/whatsapp/toggle-bot', {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify({ enabled })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`WhatsApp Bot is now ${enabled ? 'ENABLED' : 'DISABLED'}`, 'success');
+          const botLabel = document.getElementById('bot-label');
+          if (botLabel) botLabel.textContent = enabled ? 'Shasha AI Bot: Active' : 'Shasha AI Bot: OFF';
+        } else {
+          showToast(data.message || 'Failed to toggle bot', 'error');
+          document.getElementById('bot-toggle').checked = !enabled;
+        }
+      } catch (e) {
+        showToast('Error toggling bot', 'error');
+        document.getElementById('bot-toggle').checked = !enabled;
+      }
+    }
+
+    // ─────────────────────────────────────────────
+    // Load & Render Conversations List
+    // ─────────────────────────────────────────────
+    async function loadChats(showSpinner = true) {
+      try {
+        const listEl = document.getElementById('chat-list');
+        if (showSpinner && allChats.length === 0) {
+          listEl.innerHTML = '<div style="padding: 3rem 1rem; text-align: center; color: #A3AED0;">Loading conversations...</div>';
+        }
+
+        const res = await fetch('/api/whatsapp/chats', { headers: authHeaders() });
+        const data = await res.json();
+        if (data.success) {
+          allChats = data.chats || [];
+          renderConversations();
+        }
+      } catch (err) {
+        console.error('Error loading chats:', err);
+      }
+    }
+
+    function renderConversations() {
+      const listEl = document.getElementById('chat-list');
+      let filtered = [...allChats];
+
+      if (currentFilter === 'bot') {
+        filtered = filtered.filter(c => !c.assigned_to_human);
+      } else if (currentFilter === 'human') {
+        filtered = filtered.filter(c => c.assigned_to_human);
+      } else if (currentFilter === 'orders') {
+        filtered = filtered.filter(c => c.latest_order_number);
+      }
+
+      const searchQuery = (document.getElementById('chat-search')?.value || '').toLowerCase().trim();
+      if (searchQuery) {
+        filtered = filtered.filter(c =>
+          (c.customer_name || '').toLowerCase().includes(searchQuery) ||
+          (c.phone_number || '').includes(searchQuery) ||
+          (c.display_phone || '').includes(searchQuery) ||
+          (c.latest_order_number || '').toLowerCase().includes(searchQuery)
+        );
+      }
+
+      if (filtered.length === 0) {
+        listEl.innerHTML = '<div style="padding: 3rem 1rem; text-align: center; color: #A3AED0; font-size: 0.85rem;">No matching conversations</div>';
+        return;
+      }
+
+      listEl.innerHTML = filtered.map(c => {
+        const cleanPhone = (c.phone_number || '').replace('@lid', '').replace('@s.whatsapp.net', '');
+        const phoneFormatted = formatPhoneDisplay(c.display_phone || cleanPhone);
+        const name = c.customer_name || 'Customer';
+        const timeStr = c.last_message_at ? formatTime(c.last_message_at) : '';
+        const preview = c.last_message ? escapeHtml(c.last_message) : 'No messages yet';
+        const isActive = activePhone === cleanPhone;
+
+        const isHuman = c.assigned_to_human === 1 || c.assigned_to_human === true;
+        const badgeHtml = isHuman
+          ? `<span class="hz-badge-human"><svg style="width: 11px; height: 11px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Human</span>`
+          : `<span class="hz-badge-bot"><svg style="width: 11px; height: 11px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>Bot</span>`;
+
+        const orderHtml = c.latest_order_number
+          ? `<span class="hz-badge-order"><svg style="width: 11px; height: 11px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>#${c.latest_order_number}</span>`
+          : '';
+
+        return `
+          <div class="hz-conv-card ${isActive ? 'active' : ''}" onclick="selectConversation('${cleanPhone}', '${escapeHtml(name)}', '${phoneFormatted}', ${isHuman ? 1 : 0})">
+            <div class="hz-conv-avatar">
+              <svg style="width: 18px; height: 18px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            </div>
+            <div class="hz-conv-body">
+              <div class="hz-conv-header">
+                <div class="hz-conv-phone">${phoneFormatted}</div>
+                <div class="hz-conv-time">${timeStr}</div>
+              </div>
+              <div class="hz-conv-name">${escapeHtml(name)}</div>
+              <div class="hz-conv-preview">${preview}</div>
+              <div class="hz-conv-badges">
+                ${badgeHtml}
+                ${orderHtml}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function setFilter(filter, btn) {
+      currentFilter = filter;
+      document.querySelectorAll('.hz-chat-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderConversations();
+    }
+
+    function handleSearch(val) {
+      renderConversations();
+    }
+
+    // ─────────────────────────────────────────────
+    // Select & Open Conversation (CRM View)
+    // ─────────────────────────────────────────────
+    async function selectConversation(phone, name, phoneFormatted, isHuman) {
+      activePhone = phone;
+      window.activePhone = phone;
+      activeCustomerName = name;
+
+      // Update Header
+      document.getElementById('chat-empty').style.display = 'none';
+      document.getElementById('chat-header').style.display = 'flex';
+      document.getElementById('chat-stream').style.display = 'flex';
+      document.getElementById('chat-bottom-bar').style.display = 'block';
+
+      document.getElementById('header-phone').textContent = phoneFormatted;
+      document.getElementById('header-name').textContent = name;
+
+      const badge = document.getElementById('header-badge');
+      badge.textContent = isHuman ? 'Human' : 'Bot';
+      badge.className = isHuman ? 'hz-badge-human' : 'hz-badge-bot';
+
+      const btnTake = document.getElementById('btn-takeover');
+      const btnRet = document.getElementById('btn-returnbot');
+      if (isHuman) {
+        btnTake.style.display = 'none';
+        btnRet.style.display = 'inline-flex';
+      } else {
+        btnTake.style.display = 'inline-flex';
+        btnRet.style.display = 'none';
+      }
+
+      renderConversations();
+      await fetchChatData(phone);
+    }
+
+    async function fetchChatData(phone) {
+      const streamEl = document.getElementById('chat-stream');
+      streamEl.innerHTML = '<div style="text-align: center; color: #A3AED0; padding: 3rem;">Loading chat history...</div>';
+
+      try {
+        const res = await fetch(`/api/whatsapp/chats/${phone}`, { headers: authHeaders() });
+        const data = await res.json();
+        if (data.success) {
+          renderMessages(data.messages || []);
+          renderCrmPanel(data);
+        }
+      } catch (err) {
+        streamEl.innerHTML = '<div style="text-align: center; color: #EE5D50; padding: 3rem;">Failed to load chat history.</div>';
+      }
+    }
+
+    function renderMessages(messages) {
+      const streamEl = document.getElementById('chat-stream');
+      streamEl.innerHTML = '';
+
+      if (messages.length === 0) {
+        streamEl.innerHTML = '<div style="text-align: center; color: #A3AED0; padding: 3rem;">No conversation history yet. Start by sending a greeting!</div>';
+        return;
+      }
+
+      let lastDate = '';
+      messages.forEach(msg => {
+        const msgDate = new Date(msg.created_at).toLocaleDateString();
+        if (msgDate !== lastDate) {
+          const divider = document.createElement('div');
+          divider.className = 'hz-date-divider';
+          divider.textContent = msgDate === new Date().toLocaleDateString() ? 'Today' : msgDate;
+          streamEl.appendChild(divider);
+          lastDate = msgDate;
+        }
+        appendBubble(msg, false);
+      });
+
+      streamEl.scrollTop = streamEl.scrollHeight;
+    }
+
+    function appendBubble(msg, shouldScroll = true) {
+      const streamEl = document.getElementById('chat-stream');
+      if (!streamEl) return;
+
+      const isIncoming = msg.direction === 'incoming';
+      const isAdmin = msg.sent_by === 'admin';
+      const isBot = msg.sent_by === 'bot';
+
+      const group = document.createElement('div');
+      group.className = `hz-msg-group ${isIncoming ? 'hz-msg-incoming' : 'hz-msg-outgoing'} ${isAdmin ? 'admin-message' : ''}`;
+
+      let mediaHtml = '';
+      if (msg.media_url) {
+        const type = (msg.media_type || '').toLowerCase();
+        const url = msg.media_url.toLowerCase();
+        const isPdf = type === 'pdf' || url.endsWith('.pdf');
+        const isAudio = type === 'audio' || type === 'voice' || url.endsWith('.ogg') || url.endsWith('.mp3') || url.endsWith('.m4a') || url.endsWith('.opus');
+        const isVideo = type === 'video' || url.endsWith('.mp4');
+        const isImage = type === 'image' || url.endsWith('.jpg') || url.endsWith('.jpeg') || url.endsWith('.png') || url.endsWith('.webp');
+
+        if (isAudio) {
+          mediaHtml = `
+            <div style="margin-top: 6px; padding: 4px 0;">
+              <div style="font-size: 0.75rem; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 5px;">
+                <svg style="width: 14px; height: 14px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+                <span>Voice Note / Audio</span>
+              </div>
+              <audio controls preload="metadata" style="width: 100%; max-width: 280px; height: 38px; border-radius: 20px;">
+                <source src="${msg.media_url}">
+                Your browser does not support audio playback.
+              </audio>
+            </div>
+          `;
+        } else if (isPdf) {
+          mediaHtml = `
+            <a href="${msg.media_url}" target="_blank" class="hz-pdf-card">
+              <span style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; background: #F4F7FE; color: var(--hz-brand);">
+                <svg style="width: 18px; height: 18px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+              </span>
+              <div>
+                <div>View PDF Invoice / Receipt</div>
+                <div style="font-size: 0.7rem; color: #A3AED0;">Click to open / download</div>
+              </div>
+            </a>
+          `;
+        } else if (isVideo) {
+          mediaHtml = `
+            <video controls style="max-width: 280px; border-radius: 12px; margin-top: 6px;">
+              <source src="${msg.media_url}">
+              Your browser does not support video playback.
+            </video>
+          `;
+        } else if (isImage) {
+          mediaHtml = `<img src="${msg.media_url}" class="hz-bubble-img" onclick="openLightbox('${msg.media_url}')" title="Click to enlarge">`;
+        } else {
+          mediaHtml = `
+            <a href="${msg.media_url}" target="_blank" class="hz-pdf-card">
+              <span style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; background: #F4F7FE; color: var(--hz-gray-sub);">
+                <svg style="width: 18px; height: 18px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+              </span>
+              <div>
+                <div>Document Attachment</div>
+                <div style="font-size: 0.7rem; color: #A3AED0;">Click to download</div>
+              </div>
+            </a>
+          `;
+        }
+      }
+
+      const textHtml = msg.message ? escapeHtml(msg.message).replace(/\n/g, '<br>') : '';
+      const senderLabel = isIncoming ? 'Customer' : (isAdmin ? 'Team' : 'Shasha AI');
+      const timeStr = formatTime(msg.created_at);
+
+      group.innerHTML = `
+        <div class="hz-msg-bubble">
+          ${mediaHtml}
+          ${textHtml ? `<div style="${mediaHtml ? 'margin-top: 6px;' : ''}">${textHtml}</div>` : ''}
+        </div>
+        <div class="hz-msg-footer">
+          <span>${senderLabel}</span> · <span>${timeStr}</span>
+        </div>
+      `;
+
+      streamEl.appendChild(group);
+      if (shouldScroll) streamEl.scrollTop = streamEl.scrollHeight;
+    }
+
+    // ─────────────────────────────────────────────
+    // Render CRM Right Panel
+    // ─────────────────────────────────────────────
+    function renderCrmPanel(data) {
+      const panel = document.getElementById('crm-sidebar');
+      const customer = data.customerData || {};
+      const orders = data.orders || [];
+      const cart = data.cart || [];
+
+      let cartHtml = '<div style="color: #A3AED0; font-size: 0.8rem;">No active cart items</div>';
+      if (cart.length > 0) {
+        cartHtml = cart.map(i => `
+          <div class="hz-crm-row" style="border-bottom: 1px dashed var(--hz-border); padding-bottom: 4px;">
+            <span class="hz-crm-key">${escapeHtml(i.name)} (${i.size || '-'}) x${i.quantity}</span>
+            <span class="hz-crm-val">Rs. ${(i.price * i.quantity).toFixed(2)}</span>
+          </div>
+        `).join('');
+      }
+
+      let ordersHtml = '<div style="color: #A3AED0; font-size: 0.8rem;">No past orders found</div>';
+      if (orders.length > 0) {
+        ordersHtml = orders.map(o => {
+          const statusBadge = o.order_status === 'completed' || o.order_status === 'delivered' ? 'hz-badge-order' : (o.order_status === 'processing' ? 'hz-badge-bot' : 'hz-badge-human');
+          return `
+            <div class="hz-crm-order-mini">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <strong style="font-size: 0.85rem; color: var(--hz-navy);">#${o.order_number}</strong>
+                <span class="${statusBadge}">${o.order_status || 'pending'}</span>
+              </div>
+              <div style="font-size: 0.78rem; color: var(--hz-gray-sub); margin-bottom: 4px;">
+                Total: <strong style="color: var(--hz-navy);">Rs. ${parseFloat(o.total_amount).toFixed(2)}</strong> | ${formatTime(o.created_at)}
+              </div>
+              ${o.receipt_url ? `
+                <a href="${o.receipt_url}" target="_blank" style="font-size: 0.75rem; color: var(--hz-brand); font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                  <svg style="width: 12px; height: 12px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                  View Payment Receipt ↗
+                </a>
+              ` : '<span style="font-size: 0.72rem; color: #A3AED0;">No receipt attached</span>'}
+            </div>
+          `;
+        }).join('');
+      }
+
+      panel.innerHTML = `
+        <!-- AI Quick Action Banner -->
+        <div style="margin-bottom: 0.9rem;">
+          <button type="button" class="hz-btn-pill" onclick="openAiPosModal(activePhone)" style="width: 100%; justify-content: center; background: linear-gradient(135deg, #4318FF 0%, #7551FF 100%); color: #FFFFFF; font-weight: 800; padding: 0.75rem 1rem; border: none; box-shadow: 0 4px 16px rgba(67, 24, 255, 0.22); gap: 6px; cursor: pointer; border-radius: 12px;">
+            <svg style="width: 15px; height: 15px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+            ✨ 1-Click AI Create Order
+          </button>
+        </div>
+
+        <!-- Customer Profile Widget -->
+        <div class="hz-crm-widget">
+          <div class="hz-crm-widget-title">
+            <svg style="width: 15px; height: 15px; color: var(--hz-brand);" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Customer Profile
+          </div>
+          <div class="hz-crm-row">
+            <span class="hz-crm-key">Name:</span>
+            <span class="hz-crm-val">${escapeHtml(customer.name || activeCustomerName || 'Not provided')}</span>
+          </div>
+          <div class="hz-crm-row">
+            <span class="hz-crm-key">Contact:</span>
+            <span class="hz-crm-val">${formatPhoneDisplay(customer.phone || activePhone)}</span>
+          </div>
+          <div class="hz-crm-row">
+            <span class="hz-crm-key">Address:</span>
+            <span class="hz-crm-val">${escapeHtml(customer.address || 'Not provided')}</span>
+          </div>
+          <div class="hz-crm-row">
+            <span class="hz-crm-key">City:</span>
+            <span class="hz-crm-val">${escapeHtml(customer.city || 'Not provided')}</span>
+          </div>
+        </div>
+
+        <!-- Live Cart / AI Intent Widget -->
+        <div class="hz-crm-widget">
+          <div class="hz-crm-widget-title">
+            <svg style="width: 15px; height: 15px; color: #01B574;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+            Live Cart (${data.state || 'idle'})
+          </div>
+          ${cartHtml}
+        </div>
+
+        <!-- Orders History Widget -->
+        <div class="hz-crm-widget">
+          <div class="hz-crm-widget-title">
+            <svg style="width: 15px; height: 15px; color: #3B82F6;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            Orders History (${orders.length})
+          </div>
+          ${ordersHtml}
+        </div>
+      `;
+    }
+
+    // ─────────────────────────────────────────────
+    // Quick Replies & Actions
+    // ─────────────────────────────────────────────
+    const QUICK_TEMPLATES = {
+      bank: "Commercial Bank\nAccount Name: U.I. WIJESINGHE\nAccount Number: 8029695559\nBranch: Anuradhapura\n\nPlease send us a photo or screenshot of the transfer slip once deposited! 💕",
+      delivery: "Our islandwide courier delivery takes 2-4 business days via Fardar Express with online tracking. Flat rate delivery charge is Rs. 450! 🚚✨",
+      catalog: "Here are some of our trending collections! Let us know your preferred dress and size (S, M, L, XL) to reserve yours! 👗🌸",
+      confirm: "✅ Payment received and verified! Your order is now being processed and packed for dispatch. Thank you for choosing FelliRo! 💖",
+      support: "Hello! FelliRo Customer Care Team is here to help you. How may we assist you today? 😊"
+    };
+
+    function insertQuickReply(key) {
+      const input = document.getElementById('chat-input');
+      if (QUICK_TEMPLATES[key]) {
+        input.value = QUICK_TEMPLATES[key];
+        autoExpand(input);
+        input.focus();
+      }
+    }
+
+    function autoExpand(el) {
+      el.style.height = 'auto';
+      el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+    }
+
+    function handleKey(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendAdminMessage();
+      }
+    }
+
+    // ─────────────────────────────────────────────
+    // Sending Admin Messages & Attachments
+    // ─────────────────────────────────────────────
+    async function sendAdminMessage() {
+      if (!activePhone) return;
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+
+      if (!text && !selectedFile) return;
+
+      const formData = new FormData();
+      if (text) formData.append('message', text);
+      if (selectedFile) formData.append('file', selectedFile);
+
+      try {
+        const res = await fetch(`/api/whatsapp/chats/${activePhone}/send`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${getAuthToken()}` },
+          body: formData
+        });
+        const data = await res.json();
+        if (data.success) {
+          input.value = '';
+          input.style.height = 'auto';
+          clearAttachment();
+        } else {
+          showToast(data.message || 'Failed to send message', 'error');
+        }
+      } catch (err) {
+        showToast('Error sending message', 'error');
+      }
+    }
+
+    function handleFileSelected(input) {
+      if (input.files && input.files[0]) {
+        selectedFile = input.files[0];
+        document.getElementById('file-attachment-preview').style.display = 'flex';
+        document.getElementById('file-preview-name').textContent = `${selectedFile.name} (${(selectedFile.size / 1024).toFixed(1)} KB)`;
+      }
+    }
+
+    function clearAttachment() {
+      selectedFile = null;
+      document.getElementById('file-attachment-preview').style.display = 'none';
+      document.getElementById('chat-file-input').value = '';
+    }
+
+    // ─────────────────────────────────────────────
+    // Bot Takeover / Reset / Delete Handlers
+    // ─────────────────────────────────────────────
+    async function assignToHuman() {
+      if (!activePhone) return;
+      try {
+        const res = await fetch(`/api/whatsapp/chats/${activePhone}/assign-human`, {
+          method: 'POST', headers: authHeaders()
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Chat assigned to Team. You have full control.', 'success');
+          document.getElementById('btn-takeover').style.display = 'none';
+          document.getElementById('btn-returnbot').style.display = 'inline-flex';
+          const badge = document.getElementById('header-badge');
+          badge.textContent = 'Human';
+          badge.className = 'hz-badge-human';
+
+          const found = allChats.find(c => (c.phone_number || '').replace('@lid', '') === activePhone);
+          if (found) found.assigned_to_human = 1;
+          renderConversations();
+        }
+      } catch (e) { showToast('Failed to assign', 'error'); }
+    }
+
+    async function assignToBot() {
+      if (!activePhone) return;
+      try {
+        const res = await fetch(`/api/whatsapp/chats/${activePhone}/assign-bot`, {
+          method: 'POST', headers: authHeaders()
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Chat returned to Shasha AI Bot.', 'success');
+          document.getElementById('btn-takeover').style.display = 'inline-flex';
+          document.getElementById('btn-returnbot').style.display = 'none';
+          const badge = document.getElementById('header-badge');
+          badge.textContent = 'Bot';
+          badge.className = 'hz-badge-bot';
+
+          const found = allChats.find(c => (c.phone_number || '').replace('@lid', '') === activePhone);
+          if (found) found.assigned_to_human = 0;
+          renderConversations();
+        }
+      } catch (e) { showToast('Failed to return to bot', 'error'); }
+    }
+
+    async function resetCustomerSession() {
+      if (!activePhone) return;
+      if (!confirm(`Reset session and cart for ${formatPhoneDisplay(activePhone)}?`)) return;
+
+      try {
+        const res = await fetch(`/api/whatsapp/chats/${activePhone}/reset`, {
+          method: 'POST', headers: authHeaders()
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Customer session & cart reset to start.', 'success');
+          const badge = document.getElementById('header-badge');
+          badge.textContent = 'Bot';
+          badge.className = 'hz-badge-bot';
+          document.getElementById('btn-takeover').style.display = 'inline-flex';
+          document.getElementById('btn-returnbot').style.display = 'none';
+          refreshActiveChat();
+        }
+      } catch (e) { showToast('Failed to reset session', 'error'); }
+    }
+
+    async function deleteActiveChat() {
+      if (!activePhone) return;
+      if (!confirm(`Are you sure you want to PERMANENTLY delete the chat history for ${formatPhoneDisplay(activePhone)}?`)) return;
+
+      try {
+        const res = await fetch(`/api/whatsapp/chats/${activePhone}`, {
+          method: 'DELETE', headers: authHeaders()
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Chat deleted successfully.', 'success');
+          allChats = allChats.filter(c => (c.phone_number || '').replace('@lid', '') !== activePhone);
+          activePhone = null;
+          document.getElementById('chat-header').style.display = 'none';
+          document.getElementById('chat-stream').style.display = 'none';
+          document.getElementById('chat-bottom-bar').style.display = 'none';
+          document.getElementById('chat-empty').style.display = 'flex';
+          document.getElementById('crm-sidebar').innerHTML = '<div style="text-align: center; color: #A3AED0; padding: 3rem 0;"><div style="width: 48px; height: 48px; border-radius: 14px; background: #F4F7FE; color: var(--hz-brand); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.8rem auto;"><svg style="width: 24px; height: 24px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/></svg></div><p style="font-size: 0.85rem; font-weight: 600;">Customer profile and order history will appear here.</p></div>';
+          renderConversations();
+        } else {
+          showToast(data.message || 'Failed to delete chat', 'error');
+        }
+      } catch (e) { showToast('Error deleting chat', 'error'); }
+    }
+
+    async function confirmClearAllChats() {
+      if (!confirm('WARNING: Are you sure you want to CLEAR ALL customer conversations and chat history from the system?')) return;
+
+      try {
+        const res = await fetch('/api/whatsapp/chats/clear-all', {
+          method: 'POST', headers: authHeaders()
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('All chat history cleared.', 'success');
+          allChats = [];
+          activePhone = null;
+          document.getElementById('chat-header').style.display = 'none';
+          document.getElementById('chat-stream').style.display = 'none';
+          document.getElementById('chat-bottom-bar').style.display = 'none';
+          document.getElementById('chat-empty').style.display = 'flex';
+          renderConversations();
+        } else {
+          showToast(data.message || 'Failed to clear chats', 'error');
+        }
+      } catch (e) { showToast('Error clearing all chats', 'error'); }
+    }
+
+    function refreshActiveChat() {
+      if (activePhone) fetchChatData(activePhone);
+    }
+
+    // ─────────────────────────────────────────────
+    // QR & Lightbox Modals
+    // ─────────────────────────────────────────────
+    async function openQrModal() {
+      openModal('qr-modal');
+      const el = document.getElementById('qr-display');
+      el.innerHTML = '<div style="color: var(--hz-gray-sub); font-weight: 600;">Connecting to WhatsApp...</div>';
+      try {
+        const res = await fetch('/api/whatsapp/qr', { headers: authHeaders() });
+        const data = await res.json();
+        if (data.connected) {
+          el.innerHTML = '<div style="display: flex; flex-direction: column; align-items: center; gap: 8px;"><svg style="width: 48px; height: 48px; color: #01B574;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><p style="color: #01B574; font-weight: 800; margin: 0;">WhatsApp Connected & Active!</p></div>';
+        } else if (data.qr) {
+          el.innerHTML = `<img src="${data.qr}" alt="WhatsApp QR" style="max-width: 240px; border-radius: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">`;
+        } else {
+          el.innerHTML = '<div style="color: #64748b; font-weight: 600; text-align: center; padding: 20px;"><p style="margin-bottom: 10px;">Generating QR Code, please wait...</p><button class="hz-btn-pill hz-btn-primary" onclick="forceRestartBotInChat()" style="font-size: 0.85rem;">Generate QR Code</button></div>';
+        }
+      } catch (e) { }
+    }
+
+    async function forceRestartBotInChat() {
+      const el = document.getElementById('qr-display');
+      if (el) {
+        el.innerHTML = '<div style="color: var(--hz-brand); font-weight: 700; text-align: center; padding: 20px;"><div class="hz-spinner" style="margin: 0 auto 10px auto;"></div>Restarting WhatsApp session & generating new QR...</div>';
+      }
+
+      try {
+        const res = await fetch('/api/whatsapp/restart', {
+          method: 'POST',
+          headers: authHeaders()
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(data.message || 'Bot restart initiated. QR code incoming...', 'success');
+          let attempts = 0;
+          const qrInterval = setInterval(async () => {
+            attempts++;
+            await openQrModal();
+            if (attempts >= 6) clearInterval(qrInterval);
+          }, 1500);
+        } else {
+          showToast(data.message || 'Failed to restart bot', 'error');
+        }
+      } catch (err) {
+        console.error('Restart bot error:', err);
+        showToast('Failed to restart bot', 'error');
+      }
+    }
+
+    function openLightbox(url) {
+      document.getElementById('lightbox-img').src = url;
+      openModal('lightbox-modal');
+    }
+
+    // Helpers
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str || '';
+      return div.innerHTML;
+    }
+
+    function formatTime(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    // ─────────────────────────────────────────────
+    // Init on Load
+    // ─────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+      checkAdminAuth();
+      loadWaStatus();
+      loadChats();
+      setInterval(() => loadChats(false), 15000);
+      setInterval(loadWaStatus, 15000);
+    });
+  </script>
+</body>
+
+</html>

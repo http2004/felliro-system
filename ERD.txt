@@ -1,0 +1,124 @@
+┌──────────────┐      ┌──────────────┐      ┌──────────────┐
+│    Users     │      │   Products   │      │  Categories  │
+├──────────────┤      ├──────────────┤      ├──────────────┤
+│ id           │◄───┐ │ id           │◄─┐   │ id           │
+│ name         │     │ │ name         │  │   │ name         │
+│ email        │     │ │ description  │  │   │ parent_id    │
+│ password     │     │ │ price        │  │   │ description  │
+│ role         │     │ │ cost_price   │  │   └──────────────┘
+│ phone        │     │ │ category_id  │──┘
+│ profile_image│     │ │ size         │
+│ created_at   │     │ │ color        │
+│ updated_at   │     │ │ quantity     │
+└──────────────┘     │ │ min_stock    │
+       │             │ │ status       │
+       │             │ │ is_trending  │
+       │             │ │ rating       │
+       │             │ │ created_by   │──┐
+       │             │ │ created_at   │  │
+       │             │ │ updated_at   │  │
+       │             │ └──────────────┘  │
+       │             │        │          │
+       │             │        │          │
+       │             │  ┌─────▼─────┐    │
+       │             │  │Product_   │    │
+       │             │  │Images     │    │
+       │             │  ├───────────┤    │
+       │             │  │ id        │    │
+       │             │  │product_id │────┘
+       │             │  │image_url  │
+       │             │  │is_primary │
+       │             │  └───────────┘
+       │             │
+       │             │  ┌──────────────┐
+       │             │  │Product_Views│
+       │             │  ├──────────────┤
+       │             │  │ id           │
+       │             └──│ product_id   │
+       │                │ ip_address   │
+       │                │ user_agent   │
+       │                │ session_id   │
+       │                └──────────────┘
+       │
+       │  ┌──────────────┐      ┌──────────────┐
+       │  │    Orders    │      │  Order_Items │
+       │  ├──────────────┤      ├──────────────┤
+       │  │ id           │──────│ id           │
+       │  │ order_number │      │ order_id     │
+       │  │ customer_id  │──┐   │ product_id   │───┐
+       │  │ customer_name│  │   │ quantity     │   │
+       │  │ customer_phone│ │   │ price        │   │
+       │  │ customer_email│ │   │ discount     │   │
+       │  │ total_amount │  │   │ total        │   │
+       │  │ discount     │  │   │ size         │   │
+       │  │ tax          │  │   │ color        │   │
+       │  │ net_amount   │  │   └──────────────┘   │
+       │  │ payment_method│  │                      │
+       │  │ payment_status│  │                      │
+       │  │ order_status │  │                      │
+       │  │ tracking_no  │  │                      │
+       │  │ created_by   │──┘                      │
+       │  │ created_at   │                         │
+       │  │ updated_at   │                         │
+       │  └──────────────┘                         │
+       │         │                                 │
+       │         │  ┌──────────────┐               │
+       │         │  │Order_Status_ │               │
+       │         │  │History       │               │
+       │         │  ├──────────────┤               │
+       │         │  │ id           │               │
+       │         └──│ order_id     │               │
+       │            │ status       │               │
+       │            │ note         │               │
+       │            │ updated_by   │───────────────┘
+       │            │ created_at   │
+       │            └──────────────┘
+       │
+       │  ┌──────────────┐      ┌──────────────┐
+       │  │   Returns    │      │Inventory_Logs│
+       │  ├──────────────┤      ├──────────────┤
+       │  │ id           │      │ id           │
+       │  │ order_id     │───── │ product_id   │───┐
+       │  │ product_id   │──┐   │ prev_qty     │   │
+       │  │ quantity     │  │   │ new_qty      │   │
+       │  │ reason       │  │   │ change_type  │   │
+       │  │ description  │  │   │ reference_id │   │
+       │  │ status       │  │   │ note         │   │
+       │  │ return_type  │  │   │ created_by   │───┤
+       │  │ processed_by │──┘   │ created_at   │   │
+       │  │ created_at   │      └──────────────┘   │
+       │  │ updated_at   │                         │
+       │  └──────────────┘                         │
+       │                                            │
+       │  ┌──────────────┐      ┌──────────────┐   │
+       │  │ Email_Logs   │      │ WhatsApp_Logs│   │
+       │  ├──────────────┤      ├──────────────┤   │
+       │  │ id           │      │ id           │   │
+       │  │ recipient    │      │ product_id   │───┘
+       │  │ subject      │      │ phone_number │
+       │  │ template     │      │ message      │
+       │  │ content      │      │ status       │
+       │  │ status       │      │ created_at   │
+       │  │ reference_type│     └──────────────┘
+       │  │ reference_id │
+       │  │ error_message│      ┌──────────────┐
+       │  │ sent_at      │      │   Regions    │
+       │  └──────────────┘      ├──────────────┤
+       │                         │ id           │
+       │  ┌──────────────┐      │ name         │
+       │  │System_       │      │ province     │
+       │  │Settings      │      │ delivery_charge
+       │  ├──────────────┤      │ is_active    │
+       │  │ id           │      └──────────────┘
+       │  │ setting_key  │
+       │  │ setting_value│      ┌──────────────┐
+       │  │ setting_group│      │   Reports    │
+       │  │ description  │      ├──────────────┤
+       │  │ updated_at   │      │ id           │
+       │  └──────────────┘      │ name         │
+       │                         │ type         │
+       └─────────────────────────│ report_data  │
+                                 │ filters      │
+                                 │ generated_by │──┘
+                                 │ generated_at │
+                                 └──────────────┘

@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload Payment Receipt — FelliRo Clothing</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Outfit', sans-serif;
+    }
+    body {
+      background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+      color: #F8FAFC;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+    .card {
+      background: rgba(30, 41, 59, 0.85);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 24px;
+      max-width: 480px;
+      width: 100%;
+      padding: 2.5rem;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      animation: fadeIn 0.4s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .brand {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .brand h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      background: linear-gradient(135deg, #EC4899 0%, #8B5CF6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .brand p {
+      color: #94A3B8;
+      font-size: 0.9rem;
+      margin-top: 0.4rem;
+    }
+    .form-group {
+      margin-bottom: 1.4rem;
+    }
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #CBD5E1;
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    input[type="text"], input[type="tel"] {
+      width: 100%;
+      padding: 0.85rem 1.1rem;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      color: #FFF;
+      font-size: 1rem;
+      outline: none;
+      transition: all 0.2s;
+    }
+    input:focus {
+      border-color: #8B5CF6;
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.25);
+    }
+    .dropzone {
+      border: 2px dashed rgba(139, 92, 246, 0.5);
+      border-radius: 16px;
+      padding: 2rem 1.5rem;
+      text-align: center;
+      background: rgba(15, 23, 42, 0.4);
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .dropzone:hover, .dropzone.dragover {
+      border-color: #EC4899;
+      background: rgba(236, 72, 153, 0.05);
+    }
+    .dropzone-icon {
+      font-size: 2.8rem;
+      margin-bottom: 0.5rem;
+    }
+    .dropzone p {
+      color: #94A3B8;
+      font-size: 0.9rem;
+    }
+    .dropzone span {
+      color: #C084FC;
+      font-weight: 600;
+    }
+    .file-input {
+      display: none;
+    }
+    .preview-box {
+      display: none;
+      margin-top: 1rem;
+      text-align: center;
+      background: rgba(15, 23, 42, 0.8);
+      border-radius: 12px;
+      padding: 1rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .preview-box img {
+      max-width: 100%;
+      max-height: 200px;
+      border-radius: 8px;
+    }
+    .preview-box .file-info {
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+      color: #CBD5E1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .btn-remove {
+      background: #EF4444;
+      color: #FFF;
+      border: none;
+      padding: 0.3rem 0.7rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.75rem;
+    }
+    .btn-submit {
+      width: 100%;
+      padding: 1rem;
+      margin-top: 1.5rem;
+      background: linear-gradient(135deg, #EC4899 0%, #8B5CF6 100%);
+      color: #FFF;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 10px 25px -5px rgba(236, 72, 153, 0.4);
+      transition: all 0.2s;
+    }
+    .btn-submit:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 30px -5px rgba(236, 72, 153, 0.5);
+    }
+    .btn-submit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .success-box {
+      display: none;
+      text-align: center;
+      padding: 2rem 1rem;
+    }
+    .success-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes popIn {
+      0% { transform: scale(0); }
+      100% { transform: scale(1); }
+    }
+    .alert {
+      padding: 0.8rem 1rem;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      margin-bottom: 1.2rem;
+      display: none;
+    }
+    .alert-error {
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid #EF4444;
+      color: #FCA5A5;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card" id="upload-card">
+    <div class="brand">
+      <h1>FELLIRO</h1>
+      <p>Official Payment Receipt Portal</p>
+    </div>
+
+    <div id="alert" class="alert alert-error"></div>
+
+    <form id="receipt-form">
+      <div class="form-group">
+        <label for="orderNumber">Order Number</label>
+        <input type="text" id="orderNumber" name="orderNumber" placeholder="e.g. FELLIRO-2026-1234" required />
+      </div>
+
+      <div class="form-group">
+        <label for="phone">Customer Phone (Optional)</label>
+        <input type="tel" id="phone" name="phone" placeholder="e.g. 0712345678" />
+      </div>
+
+      <div class="form-group">
+        <label>Payment Slip / Bank Transfer Receipt</label>
+        <div class="dropzone" id="dropzone" onclick="document.getElementById('file-input').click()">
+          <div class="dropzone-icon">📎</div>
+          <p>Tap to select <span>Photo or PDF Document</span></p>
+          <p style="font-size: 0.75rem; margin-top: 0.3rem; color: #64748B;">Supports JPG, PNG, WEBP, PDF (Up to 25MB)</p>
+          <input type="file" id="file-input" class="file-input" accept="image/*,application/pdf" />
+        </div>
+
+        <div class="preview-box" id="preview-box">
+          <div id="preview-content"></div>
+          <div class="file-info">
+            <span id="file-name">receipt.jpg</span>
+            <button type="button" class="btn-remove" onclick="removeFile()">Remove</button>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-submit" id="btn-submit">
+        🚀 Submit Payment Receipt
+      </button>
+    </form>
+
+    <div class="success-box" id="success-box">
+      <div class="success-icon">✅</div>
+      <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem; color: #34D399;">Receipt Uploaded!</h2>
+      <p style="color: #94A3B8; font-size: 0.95rem; margin-bottom: 1.5rem;">
+        We have linked your receipt to Order <strong id="success-order-num" style="color:#FFF;"></strong>.
+      </p>
+      <p style="font-size: 0.85rem; color: #CBD5E1; background: rgba(15, 23, 42, 0.6); padding: 1rem; border-radius: 12px;">
+        Our team will verify your payment and dispatch your order. You will receive real-time updates on WhatsApp! 🛍️
+      </p>
+      <button onclick="location.reload()" class="btn-submit" style="margin-top: 1.5rem; background: #334155;">
+        Upload Another Receipt
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const orderParam = urlParams.get('order') || urlParams.get('orderNumber') || urlParams.get('id');
+    const phoneParam = urlParams.get('phone');
+
+    if (orderParam) {
+      document.getElementById('orderNumber').value = orderParam;
+    }
+    if (phoneParam) {
+      document.getElementById('phone').value = phoneParam;
+    }
+
+    let selectedFile = null;
+    const fileInput = document.getElementById('file-input');
+    const dropzone = document.getElementById('dropzone');
+    const previewBox = document.getElementById('preview-box');
+    const previewContent = document.getElementById('preview-content');
+    const fileNameSpan = document.getElementById('file-name');
+    const form = document.getElementById('receipt-form');
+    const alertBox = document.getElementById('alert');
+    const btnSubmit = document.getElementById('btn-submit');
+    const successBox = document.getElementById('success-box');
+
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files[0]) {
+        handleFile(e.target.files[0]);
+      }
+    });
+
+    // Drag and drop
+    dropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropzone.classList.add('dragover');
+    });
+    dropzone.addEventListener('dragleave', () => {
+      dropzone.classList.remove('dragover');
+    });
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        handleFile(e.dataTransfer.files[0]);
+      }
+    });
+
+    function handleFile(file) {
+      selectedFile = file;
+      fileNameSpan.textContent = `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+      dropzone.style.display = 'none';
+      previewBox.style.display = 'block';
+
+      if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+        previewContent.innerHTML = '<div style="font-size: 3.5rem; color:#EC4899;">📄</div><p style="color:#CBD5E1; font-weight:600;">PDF Document Ready</p>';
+      } else {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          previewContent.innerHTML = `<img src="${e.target.result}" alt="Preview" />`;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function removeFile() {
+      selectedFile = null;
+      fileInput.value = '';
+      previewBox.style.display = 'none';
+      dropzone.style.display = 'block';
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      alertBox.style.display = 'none';
+
+      if (!selectedFile) {
+        alertBox.textContent = 'Please select a payment receipt photo or PDF document.';
+        alertBox.style.display = 'block';
+        return;
+      }
+
+      const orderNumber = document.getElementById('orderNumber').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+
+      const formData = new FormData();
+      formData.append('receipt', selectedFile);
+      formData.append('orderNumber', orderNumber);
+      formData.append('phone', phone);
+
+      btnSubmit.disabled = true;
+      btnSubmit.textContent = '⏳ Uploading & Linking to Order...';
+
+      try {
+        const res = await fetch('/api/whatsapp/public-upload-receipt', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          form.style.display = 'none';
+          document.getElementById('success-order-num').textContent = `#${data.orderNumber || orderNumber}`;
+          successBox.style.display = 'block';
+        } else {
+          alertBox.textContent = data.message || 'Failed to upload receipt. Please check your order number.';
+          alertBox.style.display = 'block';
+          btnSubmit.disabled = false;
+          btnSubmit.textContent = '🚀 Submit Payment Receipt';
+        }
+      } catch (err) {
+        alertBox.textContent = 'Network error. Please check your connection and try again.';
+        alertBox.style.display = 'block';
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = '🚀 Submit Payment Receipt';
+      }
+    });
+  </script>
+</body>
+</html>

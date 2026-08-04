@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Returns & Restocking - FelliRo Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <link rel="icon" href="/images/logo.png" type="image/png">
+  <link rel="stylesheet" href="/css/main.css?v=20260802_returns">
+</head>
+
+<body class="hz-body">
+
+  <div class="hz-layout" id="admin-returns-view">
+    <!-- Horizon Sidebar -->
+    <aside class="hz-sidebar">
+      <div class="hz-sidebar-brand">
+        <img src="/images/logo.png" alt="FelliRo" style="height: 32px; max-width: 145px; object-fit: contain;">
+        <span class="hz-sidebar-brand-badge">ADMIN</span>
+      </div>
+
+      <ul class="hz-sidebar-nav">
+        <li class="hz-nav-item">
+          <a href="/admin/dashboard" class="hz-nav-link">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="7" height="9" x="3" y="3" rx="1" />
+              <rect width="7" height="5" x="14" y="3" rx="1" />
+              <rect width="7" height="9" x="14" y="12" rx="1" />
+              <rect width="7" height="5" x="3" y="16" rx="1" />
+            </svg>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li class="hz-nav-item">
+          <a href="/admin/products" class="hz-nav-link">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m7.5 4.27 9 5.15" />
+              <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+              <path d="m3.3 7 8.7 5 8.7-5" />
+              <path d="M12 22V12" />
+            </svg>
+            <span>Inventory & Stock</span>
+          </a>
+        </li>
+        <li class="hz-nav-item">
+          <a href="/admin/orders" class="hz-nav-link">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="8" cy="21" r="1" />
+              <circle cx="19" cy="21" r="1" />
+              <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
+            </svg>
+            <span>Orders & POS</span>
+          </a>
+        </li>
+        <li class="hz-nav-item">
+          <a href="/admin/returns" class="hz-nav-link active">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+              <path d="M3 3v5h5" />
+            </svg>
+            <span>Returns Handling</span>
+          </a>
+        </li>
+        <li class="hz-nav-item">
+          <a href="/admin/reports" class="hz-nav-link">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" x2="12" y1="20" y2="10" />
+              <line x1="18" x2="18" y1="20" y2="4" />
+              <line x1="6" x2="6" y1="20" y2="16" />
+            </svg>
+            <span>Sales Reports</span>
+          </a>
+        </li>
+        <li class="hz-nav-item">
+          <a href="/admin/chats" class="hz-nav-link">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
+            </svg>
+            <span>Customer Chats</span>
+          </a>
+        </li>
+        <li class="hz-nav-item" style="margin-top: 1.5rem;">
+          <a href="javascript:void(0)" onclick="adminLogout()" class="hz-nav-link logout">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" x2="9" y1="12" y2="12" />
+            </svg>
+            <span>Logout</span>
+          </a>
+        </li>
+      </ul>
+
+      <!-- Sidebar Promo Card -->
+      <div class="hz-sidebar-promo">
+        <div class="hz-sidebar-promo-title">FelliRo Restock Pro</div>
+        <div class="hz-sidebar-promo-desc">Automated inventory sync & damaged item write-offs.</div>
+        <a href="javascript:void(0)" onclick="openProcessReturnModal()" style="font-size: 0.75rem; font-weight: 700; color: #FFFFFF; text-decoration: underline;">Process Return &rarr;</a>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="hz-main">
+      <!-- Top Floating Navbar -->
+      <header class="hz-navbar">
+        <div>
+          <div class="hz-breadcrumbs"><a href="/admin/dashboard">Pages</a> / <span>Returns Handling</span></div>
+          <h1 class="hz-page-title">Customer Returns & Restocking</h1>
+        </div>
+
+        <div class="hz-navbar-actions">
+          <!-- WhatsApp Bot Status Pill -->
+          <div id="wa-status-badge" class="hz-wa-badge" onclick="openQrModal()" title="Click to view WhatsApp bot connection / QR">
+            <div id="wa-status-dot" class="hz-status-dot"></div>
+            <span id="wa-status-text">Checking Bot...</span>
+          </div>
+
+          <!-- Process Return Button -->
+          <button class="hz-btn-pill hz-btn-primary" onclick="openProcessReturnModal()">
+            <svg style="width: 16px; height: 16px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            + Process Customer Return
+          </button>
+        </div>
+      </header>
+
+      <!-- 4 Top Returns KPI Metric Cards -->
+      <section class="hz-kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+        <!-- 1. Total Returns -->
+        <div class="hz-kpi-card">
+          <div class="hz-icon-circle" style="background: #EFF6FF; color: #3B82F6;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+              <path d="M3 3v5h5" />
+            </svg>
+          </div>
+          <div>
+            <div class="hz-kpi-label">Total Returns</div>
+            <div class="hz-kpi-value" id="stat-returns-total">0</div>
+            <div style="font-size: 0.75rem; color: #A3AED0; font-weight: 600; margin-top: 2px;">Logged Events</div>
+          </div>
+        </div>
+
+        <!-- 2. Restocked Items -->
+        <div class="hz-kpi-card">
+          <div class="hz-icon-circle" style="background: #E6FAF5; color: #01B574;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+              <polyline points="22 4 12 14.01 9 11.01" />
+            </svg>
+          </div>
+          <div>
+            <div class="hz-kpi-label">Restocked to Inventory</div>
+            <div class="hz-kpi-value" id="stat-returns-restocked" style="color: #01B574;">0</div>
+            <div class="hz-kpi-trend" style="color: #01B574;">Back in Stock</div>
+          </div>
+        </div>
+
+        <!-- 3. Damaged / Written Off -->
+        <div class="hz-kpi-card">
+          <div class="hz-icon-circle" style="background: #FEEFEF; color: #EE5D50;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+          </div>
+          <div>
+            <div class="hz-kpi-label">Damaged / Write-Off</div>
+            <div class="hz-kpi-value" id="stat-returns-damaged" style="color: #EE5D50;">0</div>
+            <div class="hz-kpi-trend" style="color: #EE5D50;">Defective / Faulty</div>
+          </div>
+        </div>
+
+        <!-- 4. Total Volume Qty -->
+        <div class="hz-kpi-card">
+          <div class="hz-icon-circle" style="background: #F4F2FF; color: #4318FF;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="20" height="14" x="2" y="5" rx="2" />
+              <line x1="2" x2="22" y1="10" y2="10" />
+            </svg>
+          </div>
+          <div>
+            <div class="hz-kpi-label">Total Units Qty</div>
+            <div class="hz-kpi-value" id="stat-returns-units" style="color: #4318FF;">0</div>
+            <div style="font-size: 0.75rem; color: #A3AED0; font-weight: 600; margin-top: 2px;">Returned Volume</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Main Returns Table Card -->
+      <section class="hz-card" style="margin-top: 1.5rem;">
+        <div class="hz-card-header" style="flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid var(--hz-border); padding-bottom: 1.2rem; margin-bottom: 1.2rem;">
+          <div>
+            <div class="hz-card-subtitle">Merchandise & Restocking Control</div>
+            <h2 class="hz-card-title">Customer Return Logs</h2>
+          </div>
+
+          <!-- Filter & Action Controls -->
+          <div class="hz-table-controls" style="margin-bottom: 0;">
+            <div class="hz-table-filters">
+              <!-- Live Search Box -->
+              <div class="hz-search-box" style="width: 260px;">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <input type="text" id="return-search-input" class="hz-search-input" placeholder="Search order #, item, reason..." oninput="filterReturnsTable()">
+              </div>
+
+              <!-- Return Action Filter -->
+              <select id="return-type-filter" class="hz-filter-select" onchange="filterReturnsTable()">
+                <option value="all">All Action Types</option>
+                <option value="restock">Restocked to Inventory</option>
+                <option value="damage">Damaged / Written Off</option>
+              </select>
+
+              <!-- Refresh Button -->
+              <button type="button" class="hz-btn-pill" id="refresh-returns-btn" onclick="refreshReturnsData()" style="background: #F4F7FE; color: var(--hz-navy);" title="Refresh Returns & Stats">
+                <svg id="refresh-returns-icon" style="width: 14px; height: 14px; transition: transform 0.4s ease;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                  <path d="M21 3v5h-5" />
+                  <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                  <path d="M3 21v-5h5" />
+                </svg>
+                Refresh
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Table Container -->
+        <div class="hz-table-container">
+          <table class="hz-table">
+            <thead>
+              <tr>
+                <th>Order Number</th>
+                <th>Product & Variant</th>
+                <th>Qty Returned</th>
+                <th>Return Reason</th>
+                <th>Return Action</th>
+                <th>Processed Date</th>
+                <th style="text-align: right;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="admin-returns-table-body">
+              <!-- Loaded dynamically via JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Process Customer Return Modal -->
+  <!-- Process Customer Return Modal -->
+  <div class="modal-overlay" id="return-modal">
+    <div class="hz-modal-card" style="max-width: 640px;">
+      <div class="hz-modal-header">
+        <div>
+          <div style="font-size: 0.72rem; font-weight: 800; color: var(--hz-brand); text-transform: uppercase; letter-spacing: 0.5px;">Restocking & Write-Off</div>
+          <h3 class="hz-modal-title">Process Customer Return</h3>
+        </div>
+        <button type="button" class="hz-modal-close" onclick="closeModal('return-modal')">✕</button>
+      </div>
+
+      <form id="return-form" onsubmit="handleReturnSubmit(event)">
+        <!-- Dynamic Order Selection -->
+        <div class="hz-form-group">
+          <label class="hz-form-label">Select Customer Order *</label>
+          <select id="return-order-id" class="hz-form-select" onchange="loadReturnOrderProducts()" required>
+            <!-- Loaded dynamically via JS -->
+          </select>
+        </div>
+
+        <!-- Dynamic Product Selection (Loaded based on selected Order's items) -->
+        <div class="hz-form-group">
+          <label class="hz-form-label">Select Returned Product & Variation *</label>
+          <select id="return-product-id" class="hz-form-select" onchange="if(window.updateReturnQuantityMax) window.updateReturnQuantityMax()" required>
+            <!-- Loaded dynamically based on selected Order -->
+          </select>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="hz-form-group">
+            <label class="hz-form-label">Quantity Returned *</label>
+            <input type="number" id="return-quantity" class="hz-form-input" value="1" min="1" required>
+          </div>
+          <div class="hz-form-group">
+            <label class="hz-form-label">Return Action *</label>
+            <select id="return-type" class="hz-form-select">
+              <option value="restock">Restock Item to Active Inventory</option>
+              <option value="damage">Mark as Damaged / Write Off</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="hz-form-group">
+          <label class="hz-form-label">Reason for Return *</label>
+          <select id="return-reason" class="hz-form-select">
+            <option value="wrong_size">Wrong Size Exchange</option>
+            <option value="defective">Defective / Manufacturing Fault</option>
+            <option value="wrong_color">Wrong Color Sent</option>
+            <option value="damaged">Damaged during Delivery</option>
+            <option value="other">Other Reason</option>
+          </select>
+        </div>
+
+        <div class="hz-form-group">
+          <label class="hz-form-label">Description / Staff Notes (Optional)</label>
+          <textarea id="return-desc" class="hz-form-textarea" rows="2" placeholder="e.g. Customer requested size L exchange, item unopened."></textarea>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.8rem; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--hz-border);">
+          <button type="button" class="hz-btn-pill" style="background: #F4F7FE; color: var(--hz-navy);" onclick="closeModal('return-modal')">Cancel</button>
+          <button type="submit" class="hz-btn-pill hz-btn-primary">+ Process Return & Update Stock</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Core Scripts -->
+  <script src="/js/admin_v2.js?v=20260802_returns"></script>
+</body>
+
+</html>
