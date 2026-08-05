@@ -51,7 +51,7 @@ app.get('/api/test-db', async (req, res) => {
       }
     });
   } catch (err) {
-    res.status(500).json({
+    res.status(200).json({
       success: false,
       error_message: err.message,
       error_code: err.code,
@@ -59,7 +59,8 @@ app.get('/api/test-db', async (req, res) => {
         DB_HOST: process.env.DB_HOST ? process.env.DB_HOST : 'MISSING',
         DB_PORT: process.env.DB_PORT || 'MISSING',
         DB_USER: process.env.DB_USER || 'MISSING',
-        DB_NAME: process.env.DB_NAME || 'MISSING'
+        DB_NAME: process.env.DB_NAME || 'MISSING',
+        DB_PASSWORD: process.env.DB_PASSWORD ? 'SET' : 'MISSING'
       }
     });
   }
