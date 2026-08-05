@@ -34,8 +34,10 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+const publicPath = path.resolve(__dirname, 'public');
+
 // Serve static frontend files
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(publicPath));
 
 // API Routes
 app.use('/api/auth', authRoutes);
@@ -47,49 +49,22 @@ app.use('/api', regionRoutes);
 app.use('/api', whatsappRoutes);
 
 // Page Routing Shortcuts
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
+const sendPage = (res, ...filePathSegments) => {
+  res.sendFile(path.join(publicPath, ...filePathSegments));
+};
 
-app.get('/products', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'products.html'));
-});
+app.get('/', (req, res) => sendPage(res, 'index.html'));
+app.get('/products', (req, res) => sendPage(res, 'products.html'));
+app.get('/tracking', (req, res) => sendPage(res, 'tracking.html'));
 
-app.get('/tracking', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'tracking.html'));
-});
-
-app.get('/admin', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admin', 'login.html'));
-});
-
-app.get('/admin/login', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admin', 'login.html'));
-});
-
-app.get('/admin/dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admin', 'dashboard.html'));
-});
-
-app.get('/admin/products', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admin', 'products.html'));
-});
-
-app.get('/admin/orders', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admin', 'orders.html'));
-});
-
-app.get('/admin/returns', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admin', 'returns.html'));
-});
-
-app.get('/admin/reports', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admin', 'reports.html'));
-});
-
-app.get('/admin/chats', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admin', 'chats.html'));
-});
+app.get('/admin', (req, res) => sendPage(res, 'admin', 'login.html'));
+app.get('/admin/login', (req, res) => sendPage(res, 'admin', 'login.html'));
+app.get('/admin/dashboard', (req, res) => sendPage(res, 'admin', 'dashboard.html'));
+app.get('/admin/products', (req, res) => sendPage(res, 'admin', 'products.html'));
+app.get('/admin/orders', (req, res) => sendPage(res, 'admin', 'orders.html'));
+app.get('/admin/returns', (req, res) => sendPage(res, 'admin', 'returns.html'));
+app.get('/admin/reports', (req, res) => sendPage(res, 'admin', 'reports.html'));
+app.get('/admin/chats', (req, res) => sendPage(res, 'admin', 'chats.html'));
 
 // Catch unhandled errors to prevent server crashes from internal dependencies
 process.on('uncaughtException', (err) => {
@@ -100,15 +75,19 @@ process.on('uncaughtException', (err) => {
   }
 });
 
-// Start Server, then initialize WhatsApp Bot
-server.listen(PORT, () => {
-  console.log(`✨ FelliRo Clothing Management System running on http://localhost:${PORT}`);
-  
-  // Initialize WhatsApp Bot after server starts
-  try {
-    const botService = require('./whatsapp/baileysBotService');
-    botService.initBot(io);
-  } catch (err) {
-    console.error('❌ WhatsApp Bot init error:', err.message);
-  }
-});
+// Start Server locally, or export app for Vercel Serverless
+if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
+  server.listen(PORT, () => {
+    console.log(`✨ FelliRo Clothing Management System running on http://localhost:${PORT}`);
+    
+    // Initialize WhatsApp Bot after server starts
+    try {
+      const botService = require('./whatsapp/baileysBotService');
+      botService.initBot(io);
+    } catch (err) {
+      console.error('❌ WhatsApp Bot init error:', err.message);
+    }
+  });
+}
+
+module.exports = app;
