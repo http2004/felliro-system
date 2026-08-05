@@ -1,26 +1,16 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "server.js",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": [
-          "public/**",
-          "config/**",
-          "controllers/**",
-          "middleware/**",
-          "models/**",
-          "routes/**",
-          "services/**"
-        ]
-      }
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "server.js"
-    }
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/index.js" },
+    { "source": "/admin", "destination": "/admin/login.html" },
+    { "source": "/admin/login", "destination": "/admin/login.html" },
+    { "source": "/admin/dashboard", "destination": "/admin/dashboard.html" },
+    { "source": "/admin/products", "destination": "/admin/products.html" },
+    { "source": "/admin/orders", "destination": "/admin/orders.html" },
+    { "source": "/admin/returns", "destination": "/admin/returns.html" },
+    { "source": "/admin/reports", "destination": "/admin/reports.html" },
+    { "source": "/admin/chats", "destination": "/admin/chats.html" },
+    { "source": "/products", "destination": "/products.html" },
+    { "source": "/tracking", "destination": "/tracking.html" }
   ]
 }
