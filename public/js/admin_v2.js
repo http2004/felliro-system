@@ -2425,7 +2425,7 @@ function generateAndPrintAddressLabels(orders) {
           <div class="sender-section">
             <div class="from-label">FROM:</div>
             <div class="from-text">
-              <strong>FelliRo Pvt Ltd</strong>, Anuradhapura. | Hotline: <strong>071 771 6005</strong> | Web: <strong>felliro.lk</strong>
+              <strong>FelliRo Pvt Ltd</strong>, Anuradhapura. | Hotline: <strong>071 771 6005</strong> | Web: <strong>felliro.com</strong>
             </div>
           </div>
         </div>

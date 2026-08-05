@@ -144,7 +144,7 @@ exports.generateInvoice = async (order, items = []) => {
          .fontSize(8.5)
          .font('Helvetica')
          .text('Thank you for choosing FelliRo! For a better version of you.', 40, 760, { align: 'center', width: 515 })
-         .text('Hotline: +94 71 771 6005 | Website: https://felliro.lk', 40, 775, { align: 'center', width: 515 });
+         .text('Hotline: +94 71 771 6005 | Website: https://felliro.com', 40, 775, { align: 'center', width: 515 });
 
       doc.end();
 

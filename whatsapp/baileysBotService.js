@@ -708,7 +708,7 @@ async function linkReceiptToOrder(remoteJid, phone, mediaData, caption) {
 
     stateManager.setState(phone, stateManager.STATES.RECEIPT_SUBMITTED);
 
-    const receiptAck = `🌸 *Payment Receipt Received!* 🌸\n\nඔබගේ බැංකු ගෙවීම් රිසිට්පත Order *#${orderNumber || 'your order'}* වෙත සාර්ථකව සම්බන්ධ කරන ලදී. 💖\n\nඅපගේ කණ්ඩායම විසින් ගෙවීම් තහවුරු කළ පසු, ඔබගේ ඇසුරුම *Fardar Express* කුරියර් සේවාව මඟින් කඩිනමින් එවනු ඇත. 🚚✨\n\n📄 ඕනෑම වේලාවක ඔබේ Order එකේ තත්ත්වය මෙතැනින් පරීක්ෂා කළ හැක:\n🔗 https://felliro.lk/tracking\n\n_Thank you for choosing FelliRo!_ 💕`;
+    const receiptAck = `🌸 *Payment Receipt Received!* 🌸\n\nඔබගේ බැංකු ගෙවීම් රිසිට්පත Order *#${orderNumber || 'your order'}* වෙත සාර්ථකව සම්බන්ධ කරන ලදී. 💖\n\nඅපගේ කණ්ඩායම විසින් ගෙවීම් තහවුරු කළ පසු, ඔබගේ ඇසුරුම *Fardar Express* කුරියර් සේවාව මඟින් කඩිනමින් එවනු ඇත. 🚚✨\n\n📄 ඕනෑම වේලාවක ඔබේ Order එකේ තත්ත්වය මෙතැනින් පරීක්ෂා කළ හැක:\n🔗 https://felliro.com/tracking\n\n_Thank you for choosing FelliRo!_ 💕`;
 
     await sendMessage(remoteJid || phone, receiptAck);
     stateManager.addMessageToHistory(phone, 'assistant', receiptAck);
@@ -862,7 +862,7 @@ STEP 5: BRANCHING: MORE ITEMS VS BILLING
 ══════════════════════════════════════════════════════════════════════
 STEP 6: RECEIPT CONFIRMATION & TRACKING
 ══════════════════════════════════════════════════════════════════════
-• If customer asks about order status, tracking ("Order eka koheda?", "Track my order"): check RECENT CUSTOMER ORDERS and provide real-time status + tracking link: https://felliro.lk/tracking.
+• If customer asks about order status, tracking ("Order eka koheda?", "Track my order"): check RECENT CUSTOMER ORDERS and provide real-time status + tracking link: https://felliro.com/tracking.
 • If customer asks about Returns or Exchanges: explain our 7-day hassle-free exchange policy.
 
 DELIVERY CHARGES BY REGION (Fardar Express Courier):
@@ -1445,7 +1445,7 @@ async function notifyCustomerOrderConfirmed(phone, orderNumber, invoicePath) {
 
     console.log(`📤 Sending Order Confirmation & Invoice to: ${targetJid} (Order #${orderNumber})`);
 
-    const confirmText = `🎉 *Payment Confirmed!* 🎉\n\nDear Customer,\nYour payment receipt for Order *#${orderNumber}* has been verified by our team. 💖\n\nYour package is now being packed and prepared for dispatch via Fardar Express! 🚚✨\n\n📄 Your official invoice is attached below.\n\nTrack your order anytime:\n🔗 https://felliro.lk/tracking\n\nThank you for shopping with FelliRo! 💕`;
+    const confirmText = `🎉 *Payment Confirmed!* 🎉\n\nDear Customer,\nYour payment receipt for Order *#${orderNumber}* has been verified by our team. 💖\n\nYour package is now being packed and prepared for dispatch via Fardar Express! 🚚✨\n\n📄 Your official invoice is attached below.\n\nTrack your order anytime:\n🔗 https://felliro.com/tracking\n\nThank you for shopping with FelliRo! 💕`;
 
     await sock.sendMessage(targetJid, { text: confirmText });
     await saveChatLog(targetJid, 'outgoing', confirmText, null, null, 'bot');
