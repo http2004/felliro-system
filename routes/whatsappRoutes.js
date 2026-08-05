@@ -12,12 +12,16 @@ const adminUpload = multer({
 });
 
 const fs = require('fs');
+const os = require('os');
 
 // Multer for receipt uploads
 const receiptStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const dir = path.join(__dirname, '../public/uploads/receipts');
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    const baseDir = process.env.VERCEL ? os.tmpdir() : path.join(__dirname, '../public/uploads');
+    const dir = path.join(baseDir, 'receipts');
+    try {
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    } catch (e) {}
     cb(null, dir);
   },
   filename: (req, file, cb) => {

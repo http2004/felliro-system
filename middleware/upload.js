@@ -1,16 +1,27 @@
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
+const os = require('os');
 
-// Ensure uploads folder exists
-const uploadDir = path.join(__dirname, '../public/uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+// Ensure uploads folder exists safely
+let uploadDir;
+if (process.env.VERCEL) {
+  uploadDir = path.join(os.tmpdir(), 'uploads');
+} else {
+  uploadDir = path.join(__dirname, '../public/uploads');
+}
+
+try {
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+} catch (e) {
+  console.warn('Upload dir mkdir notice:', e.message);
 }
 
 // Storage Configuration
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
+    try {
+      if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+    } catch (e) {}
     cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
