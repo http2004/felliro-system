@@ -31,4 +31,47 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() });
 });
 
+// Database diagnostics endpoint
+app.get('/api/test-db', async (req, res) => {
+  try {
+    const db = require('../config/db');
+    const [rows] = await db.query('SELECT 1 + 1 AS solution, DATABASE() as db_name, USER() as db_user');
+    const [users] = await db.query('SELECT id, name, email, role FROM users');
+    res.json({
+      success: true,
+      message: 'Database connected successfully!',
+      db_info: rows[0],
+      users: users,
+      env: {
+        DB_HOST: process.env.DB_HOST ? process.env.DB_HOST : 'MISSING',
+        DB_PORT: process.env.DB_PORT || 'MISSING (default 3306)',
+        DB_USER: process.env.DB_USER || 'MISSING',
+        DB_NAME: process.env.DB_NAME || 'MISSING',
+        DB_PASSWORD: process.env.DB_PASSWORD ? 'SET' : 'MISSING'
+      }
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error_message: err.message,
+      error_code: err.code,
+      env: {
+        DB_HOST: process.env.DB_HOST ? process.env.DB_HOST : 'MISSING',
+        DB_PORT: process.env.DB_PORT || 'MISSING',
+        DB_USER: process.env.DB_USER || 'MISSING',
+        DB_NAME: process.env.DB_NAME || 'MISSING'
+      }
+    });
+  }
+});
+
+// Global error handler for API routes
+app.use((err, req, res, next) => {
+  console.error('API Error:', err);
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || 'Internal Server Error'
+  });
+});
+
 module.exports = app;
