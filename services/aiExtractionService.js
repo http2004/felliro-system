@@ -2,7 +2,8 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const db = require('../config/db');
 require('dotenv').config();
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const apiKey = process.env.GEMINI_API_KEY || 'AIzaSyDummy';
+const genAI = new GoogleGenerativeAI(apiKey);
 const modelName = process.env.GEMINI_MODEL || 'gemini-2.0-flash-lite';
 
 /**
