@@ -1,5 +1,17 @@
 const db = require('../config/db');
-const bot = require('../whatsapp/baileysBotService');
+let bot = null;
+try {
+  bot = require('../whatsapp/baileysBotService');
+} catch (e) {
+  console.warn('Bot service not loaded in this environment:', e.message);
+  bot = {
+    isBotGloballyEnabled: async () => false,
+    isReady: () => false,
+    getQrCode: () => null,
+    restartBot: async () => {},
+    sendAdminMessage: async () => { throw new Error('WhatsApp bot is not available on serverless'); }
+  };
+}
 const stateManager = require('../whatsapp/conversationState');
 
 // ─────────────────────────────────────────────
