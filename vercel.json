@@ -1,16 +1,27 @@
 {
   "version": 2,
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index.js" },
-    { "source": "/admin", "destination": "/admin/login.html" },
-    { "source": "/admin/login", "destination": "/admin/login.html" },
-    { "source": "/admin/dashboard", "destination": "/admin/dashboard.html" },
-    { "source": "/admin/products", "destination": "/admin/products.html" },
-    { "source": "/admin/orders", "destination": "/admin/orders.html" },
-    { "source": "/admin/returns", "destination": "/admin/returns.html" },
-    { "source": "/admin/reports", "destination": "/admin/reports.html" },
-    { "source": "/admin/chats", "destination": "/admin/chats.html" },
-    { "source": "/products", "destination": "/products.html" },
-    { "source": "/tracking", "destination": "/tracking.html" }
+  "builds": [
+    {
+      "src": "api/index.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "public/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "api/index.js" },
+    { "src": "/admin", "dest": "/public/admin/login.html" },
+    { "src": "/admin/login", "dest": "/public/admin/login.html" },
+    { "src": "/admin/dashboard", "dest": "/public/admin/dashboard.html" },
+    { "src": "/admin/products", "dest": "/public/admin/products.html" },
+    { "src": "/admin/orders", "dest": "/public/admin/orders.html" },
+    { "src": "/admin/returns", "dest": "/public/admin/returns.html" },
+    { "src": "/admin/reports", "dest": "/public/admin/reports.html" },
+    { "src": "/admin/chats", "dest": "/public/admin/chats.html" },
+    { "src": "/products", "dest": "/public/products.html" },
+    { "src": "/tracking", "dest": "/public/tracking.html" },
+    { "src": "/(.*)", "dest": "/public/$1" }
   ]
 }
