@@ -796,8 +796,8 @@ CORE BEHAVIOR & GUIDELINES:
 
 2. EXPLORING DESIGNS & CATEGORIES:
    - If the customer asks to see dresses or designs ("ලස්සන ඇඳුම් ටිකක් බලන්න පුළුවන්ද", "ගවුම් තියෙනවද", "Crop tops පෙන්නන්න", etc.):
-     • If they mention a specific category (${categoriesFormatted}), introduce our collection and append [ACTION:send_category_photos,category=CategoryName] so high-quality photos are sent to WhatsApp.
-     • If they ask generally, mention our available categories and ask what style they are looking for (Casual, Party wear, Work wear, Frocks, etc.).
+     • If they mention a specific category (${categoriesFormatted}), introduce our collection, mention that the entire stock and all design details can also be viewed on our official website: https://felliro.com/products , and append [ACTION:send_category_photos,category=CategoryName] so high-quality photos are sent to WhatsApp.
+     • If they ask generally, mention our available categories, provide our official website link https://felliro.com/products for full browsing, and ask what style they are looking for (Casual, Party wear, Work wear, Frocks, etc.).
 
 3. SELECTING AN ITEM & CONFIGURING:
    - When the customer picks an item (by name, design number, ID, or photo):
@@ -1429,9 +1429,9 @@ async function executeAction(targetJid, phone, action, data, conv) {
         }
 
         if (catProducts.length === 0) {
-          catProducts = products.filter(p => p.quantity > 0).slice(0, 6);
+          catProducts = products.filter(p => p.quantity > 0).slice(0, 15);
         } else {
-          catProducts = catProducts.slice(0, 8);
+          catProducts = catProducts.slice(0, 25);
         }
 
         for (const p of catProducts) {
@@ -1445,6 +1445,14 @@ async function executeAction(targetJid, phone, action, data, conv) {
             await sleep(400);
           }
         }
+
+        const categoryTitle = matchedCat ? matchedCat.name : (data.category || 'විලාසිතා');
+        const webCatalogMsg = `✨ *${categoryTitle}* හි සියලුම Designs, Colors, Sizes සහ සම්පූර්ණ Stock විස්තර අපගේ Website එකෙන් සෘජුවම බලාගත හැක:
+🔗 https://felliro.com/products
+
+ඔබ මෙහි ඇති ඇඳුමකට කැමති නම්, එහි *නම* හෝ *ID අංකය* සමඟ අවශ්‍ය *Color*, *Size*, *Quantity* එවන්න. මම Order එක සකස් කර දෙන්නම්! 💕`;
+        await sendMessage(targetJid || phone, webCatalogMsg);
+        stateManager.addMessageToHistory(phone, 'assistant', webCatalogMsg);
       } catch (err) {
         console.error('Error sending category photos:', err);
       }
@@ -1454,7 +1462,7 @@ async function executeAction(targetJid, phone, action, data, conv) {
     case 'send_product_photos':
       try {
         const { products, variants } = await getCachedCatalog();
-        const topProds = products.filter(p => p.quantity > 0).slice(0, 6);
+        const topProds = products.filter(p => p.quantity > 0).slice(0, 20);
         for (const p of topProds) {
           if (p.image_url) {
             const prodVars = variants.filter(v => v.product_id === p.id && v.quantity > 0);
@@ -1466,6 +1474,13 @@ async function executeAction(targetJid, phone, action, data, conv) {
             await sleep(350);
           }
         }
+
+        const generalWebMsg = `✨ අපගේ සම්පූර්ණ ඇඳුම් එකතුව (Full Stock & Designs) සහ විස්තර අපගේ Website එකෙන් සෘජුවම බලාගත හැක:
+🔗 https://felliro.com/products
+
+කැමති ඇඳුමේ නම හෝ ID අංකය සමඟ Color, Size, Quantity එවන්න! 💕`;
+        await sendMessage(targetJid || phone, generalWebMsg);
+        stateManager.addMessageToHistory(phone, 'assistant', generalWebMsg);
       } catch (err) {
         console.error('Error sending product photos:', err);
       }
