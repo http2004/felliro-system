@@ -1889,8 +1889,15 @@ async function initAdminOrders() {
 
   const statusForm = document.getElementById('status-update-form');
   if (statusForm) {
-    statusForm.addEventListener('submit', async (e) => {
+    statusForm.onsubmit = async (e) => {
       e.preventDefault();
+      const submitBtn = statusForm.querySelector('button[type="submit"]');
+      if (submitBtn && submitBtn.disabled) return;
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Updating...';
+      }
+
       const orderId = document.getElementById('status-order-id').value;
       const payload = {
         status: document.getElementById('status-select').value,
@@ -1914,8 +1921,13 @@ async function initAdminOrders() {
         }
       } catch (err) {
         showToast('Failed to update order status', 'error');
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Update Status';
+        }
       }
-    });
+    };
   }
 }
 

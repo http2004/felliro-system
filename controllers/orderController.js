@@ -30,12 +30,22 @@ exports.trackOrder = async (req, res) => {
       WHERE oi.order_id = ?
     `, [order.id]);
 
-    const [history] = await db.query(`
+    const [rawHistory] = await db.query(`
       SELECT status, note, created_at
       FROM order_status_history
       WHERE order_id = ?
-      ORDER BY created_at ASC
+      ORDER BY id ASC
     `, [order.id]);
+
+    // Deduplicate consecutive identical statuses in history
+    const history = [];
+    let lastSeenStatus = null;
+    for (const h of rawHistory) {
+      if (h.status !== lastSeenStatus) {
+        history.push(h);
+        lastSeenStatus = h.status;
+      }
+    }
 
     // Live Courier tracking lookup if tracking number is present
     let courierTracking = null;
@@ -376,10 +386,18 @@ exports.updateOrderStatus = async (req, res) => {
 
     await db.query(updateSql, updateParams);
 
-    await db.query(`
-      INSERT INTO order_status_history (order_id, status, note, updated_by)
-      VALUES (?, ?, ?, ?)
-    `, [orderId, status, note || `Status updated to ${status}`, req.user ? req.user.id : 1]);
+    // Avoid duplicate consecutive status history entries
+    const [lastHistory] = await db.query(
+      `SELECT status FROM order_status_history WHERE order_id = ? ORDER BY id DESC LIMIT 1`,
+      [orderId]
+    );
+
+    if (!lastHistory.length || lastHistory[0].status !== status) {
+      await db.query(`
+        INSERT INTO order_status_history (order_id, status, note, updated_by)
+        VALUES (?, ?, ?, ?)
+      `, [orderId, status, note || `Status updated to ${status}`, req.user ? req.user.id : 1]);
+    }
 
     // Automatic Stock Restoration on Cancellation
     if (status === 'cancelled' && currentOrder.order_status !== 'cancelled') {

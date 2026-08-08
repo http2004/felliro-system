@@ -585,13 +585,22 @@ function initTrackingPage() {
       </div>
     `).join('');
 
-    let historyHtml = order.history.map(h => `
+    const cleanHistory = [];
+    let lastStatus = null;
+    for (const h of (order.history || [])) {
+      if (h.status !== lastStatus) {
+        cleanHistory.push(h);
+        lastStatus = h.status;
+      }
+    }
+
+    let historyHtml = cleanHistory.map(h => `
       <div style="display: flex; gap: 1rem; align-items: flex-start; padding: 0.6rem 0;">
         <span style="font-size: 0.8rem; background: #F1F5F9; padding: 4px 10px; border-radius: 6px; font-weight: 600; min-width: 140px;">
           ${new Date(h.created_at).toLocaleString('en-LK')}
         </span>
         <div>
-          <span class="status-badge status-${h.status}">${h.status.replace(/_/g, ' ')}</span>
+          <span class="status-badge status-${h.status}">${(h.status || '').replace(/_/g, ' ')}</span>
           <div style="font-size: 0.88rem; color: #475569; margin-top: 2px;">${h.note || ''}</div>
         </div>
       </div>

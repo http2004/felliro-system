@@ -255,16 +255,26 @@
           if (!data.order.history || data.order.history.length === 0) {
             timeline.innerHTML = `<div class="timeline-item completed">
               <div class="timeline-date">${new Date(data.order.created_at).toLocaleString()}</div>
-              <div class="timeline-status">Order Placed</div>
+              <div class="timeline-status">ORDER PLACED</div>
               <div class="timeline-note">Order received and awaiting processing.</div>
             </div>`;
           } else {
-            timeline.innerHTML = data.order.history.map(h => {
+            // Deduplicate consecutive identical statuses
+            const cleanHistory = [];
+            let lastStatus = null;
+            for (const h of data.order.history) {
+              if (h.status !== lastStatus) {
+                cleanHistory.push(h);
+                lastStatus = h.status;
+              }
+            }
+
+            timeline.innerHTML = cleanHistory.map(h => {
               const dateStr = h.created_at ? new Date(h.created_at).toLocaleString() : new Date(data.order.updated_at || data.order.created_at).toLocaleString();
               return `
               <div class="timeline-item completed">
                 <div class="timeline-date">${dateStr}</div>
-                <div class="timeline-status">${h.status.toUpperCase()}</div>
+                <div class="timeline-status">${(h.status || '').toUpperCase().replace(/_/g, ' ')}</div>
                 <div class="timeline-note">${h.notes || h.note || ''}</div>
               </div>
             `}).join('');
