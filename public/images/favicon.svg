@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#111827"/>
+      <stop offset="100%" stop-color="#030712"/>
+    </linearGradient>
+    <linearGradient id="pink" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF007F"/>
+      <stop offset="100%" stop-color="#FF1493"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Base Rounded Container for perfect contrast in both Dark & Light browser tabs -->
+  <rect width="512" height="512" rx="110" fill="url(#bg)"/>
+  <rect width="504" height="504" x="4" y="4" rx="106" fill="none" stroke="#FF007F" stroke-opacity="0.3" stroke-width="8"/>
+
+  <!-- Stylized FelliRo "F" -->
+  <!-- Top Bar -->
+  <rect x="110" y="110" width="292" height="76" rx="16" fill="url(#pink)"/>
+  <!-- Middle Bar -->
+  <rect x="110" y="222" width="220" height="72" rx="14" fill="url(#pink)"/>
+  <!-- Vertical Stem -->
+  <rect x="110" y="110" width="80" height="292" rx="16" fill="url(#pink)"/>
+
+  <!-- Accent Luxury Dot (representing the 'i' in FelliRo) -->
+  <circle cx="380" cy="370" r="34" fill="#FFFFFF"/>
+</svg>

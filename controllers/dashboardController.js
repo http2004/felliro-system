@@ -3,17 +3,45 @@ const db = require('../config/db');
 exports.getStats = async (req, res) => {
   try {
     const [[{ total_orders }]] = await db.query(`SELECT COUNT(*) AS total_orders FROM orders`);
-    const [[{ total_revenue }]] = await db.query(`SELECT COALESCE(SUM(total_amount), 0) AS total_revenue FROM orders WHERE payment_status = 'paid' OR order_status != 'cancelled'`);
+    const [[{ total_revenue }]] = await db.query(`
+      SELECT COALESCE(SUM(total_amount), 0) AS total_revenue 
+      FROM orders 
+      WHERE (payment_status = 'paid' OR order_status NOT IN ('cancelled', 'failed'))
+    `);
     const [[{ total_products }]] = await db.query(`SELECT COUNT(*) AS total_products FROM products WHERE status = 'active'`);
     const [[{ low_stock_count }]] = await db.query(`SELECT COUNT(*) AS low_stock_count FROM products WHERE quantity <= min_stock_alert AND status = 'active'`);
     const [[{ total_returns }]] = await db.query(`SELECT COUNT(*) AS total_returns FROM returns`);
+
+    // Month-over-month revenue comparison
+    const [[{ this_month_rev }]] = await db.query(`
+      SELECT COALESCE(SUM(total_amount), 0) AS this_month_rev
+      FROM orders
+      WHERE (payment_status = 'paid' OR order_status NOT IN ('cancelled', 'failed'))
+        AND created_at >= DATE_FORMAT(NOW(), '%Y-%m-01')
+    `);
+    const [[{ last_month_rev }]] = await db.query(`
+      SELECT COALESCE(SUM(total_amount), 0) AS last_month_rev
+      FROM orders
+      WHERE (payment_status = 'paid' OR order_status NOT IN ('cancelled', 'failed'))
+        AND created_at >= DATE_FORMAT(NOW() - INTERVAL 1 MONTH, '%Y-%m-01')
+        AND created_at < DATE_FORMAT(NOW(), '%Y-%m-01')
+    `);
+
+    let monthly_growth = 0;
+    const thisMonth = parseFloat(this_month_rev) || 0;
+    const lastMonth = parseFloat(last_month_rev) || 0;
+    if (lastMonth > 0) {
+      monthly_growth = ((thisMonth - lastMonth) / lastMonth) * 100;
+    } else if (thisMonth > 0) {
+      monthly_growth = 100;
+    }
 
     // Fetch 5 most recent orders
     const [recent_orders] = await db.query(`
       SELECT id, order_number, customer_name, total_amount, order_status, created_at
       FROM orders
       ORDER BY id DESC
-      LIMIT 5
+      LIMIT 6
     `);
 
     // Fetch low stock items list
@@ -22,20 +50,22 @@ exports.getStats = async (req, res) => {
       FROM products
       WHERE quantity <= min_stock_alert AND status = 'active'
       ORDER BY quantity ASC
-      LIMIT 5
+      LIMIT 6
     `);
 
     res.json({
       success: true,
       stats: {
-        total_orders,
-        total_revenue: parseFloat(total_revenue),
-        total_products,
-        low_stock_count,
-        total_returns
+        total_orders: parseInt(total_orders) || 0,
+        total_revenue: parseFloat(total_revenue) || 0,
+        total_products: parseInt(total_products) || 0,
+        low_stock_count: parseInt(low_stock_count) || 0,
+        total_returns: parseInt(total_returns) || 0,
+        this_month_revenue: thisMonth,
+        monthly_growth: parseFloat(monthly_growth.toFixed(1))
       },
-      recent_orders,
-      low_stock_items
+      recent_orders: recent_orders || [],
+      low_stock_items: low_stock_items || []
     });
   } catch (error) {
     console.error('Dashboard stats error:', error);
@@ -45,29 +75,56 @@ exports.getStats = async (req, res) => {
 
 exports.getChartsData = async (req, res) => {
   try {
-    // Sales trends grouped by day
-    const [salesTrends] = await db.query(`
-      SELECT DATE(created_at) AS date, COUNT(*) AS count, SUM(total_amount) AS revenue
+    // Sales trends grouped by day for the last 14 days
+    const [rawTrends] = await db.query(`
+      SELECT DATE(created_at) AS date, COUNT(*) AS count, COALESCE(SUM(total_amount), 0) AS revenue
       FROM orders
-      WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+      WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 14 DAY)
+        AND order_status NOT IN ('cancelled', 'failed')
       GROUP BY DATE(created_at)
       ORDER BY date ASC
     `);
 
-    // Category distribution
+    // Map trends into continuous daily dates so the chart is smooth
+    const trendMap = {};
+    rawTrends.forEach(t => {
+      const dStr = new Date(t.date).toISOString().split('T')[0];
+      trendMap[dStr] = {
+        count: parseInt(t.count) || 0,
+        revenue: parseFloat(t.revenue) || 0
+      };
+    });
+
+    const salesTrends = [];
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dStr = d.toISOString().split('T')[0];
+      salesTrends.push({
+        date: dStr,
+        count: trendMap[dStr]?.count || 0,
+        revenue: trendMap[dStr]?.revenue || 0
+      });
+    }
+
+    // Category distribution with safe GROUP BY
     const [categoryShare] = await db.query(`
-      SELECT c.name AS category_name, COUNT(p.id) AS product_count, SUM(p.total_sold) AS total_sold
+      SELECT c.name AS category_name, 
+             COUNT(p.id) AS product_count, 
+             COALESCE(SUM(p.total_sold), 0) AS total_sold
       FROM categories c
       LEFT JOIN products p ON c.id = p.category_id
-      GROUP BY c.id
+      GROUP BY c.id, c.name
+      ORDER BY total_sold DESC
     `);
 
     res.json({
       success: true,
       salesTrends,
-      categoryShare
+      categoryShare: categoryShare || []
     });
   } catch (error) {
+    console.error('Charts data error:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch charts data' });
   }
 };

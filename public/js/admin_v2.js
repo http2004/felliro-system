@@ -135,7 +135,7 @@ async function editProductModal(id) {
       renderVariants(p.variants || []);
 
       document.getElementById('product-min-stock').value = p.min_stock_alert || 5;
-      document.getElementById('product-image-url').value = (p.images && p.images.length > 0) ? p.images[0].image_url : '';
+      document.getElementById('product-image-url').value = '';
       document.getElementById('product-desc').value = p.description || '';
       document.getElementById('product-trending').checked = Boolean(p.is_trending);
       
@@ -1240,6 +1240,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Admin Dashboard Overview (Horizon UI)
+let salesTrendChartInstance = null;
+let categoryShareChartInstance = null;
+
 async function initAdminDashboard() {
   try {
     const res = await fetch('/api/admin/dashboard/stats', { headers: authHeaders() });
@@ -1254,54 +1257,82 @@ async function initAdminDashboard() {
       const returnsEl = document.getElementById('stat-returns');
       if (returnsEl) returnsEl.textContent = data.stats.total_returns || 0;
 
-      const ordersContainer = document.getElementById('dashboard-recent-orders');
-      if (ordersContainer && data.recent_orders) {
-        ordersContainer.innerHTML = data.recent_orders.map(o => {
-          const initials = (o.customer_name || 'Guest').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-          let badgeClass = 'hz-pill-brand';
-          const statusLower = (o.order_status || '').toLowerCase();
-          if (['paid', 'delivered', 'completed'].includes(statusLower)) badgeClass = 'hz-pill-success';
-          else if (['pending', 'processing'].includes(statusLower)) badgeClass = 'hz-pill-warning';
-          else if (['cancelled', 'returned', 'failed'].includes(statusLower)) badgeClass = 'hz-pill-danger';
-
-          return `
-            <tr>
-              <td><span class="hz-order-badge">#${o.order_number}</span></td>
-              <td>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                  <div style="width: 30px; height: 30px; border-radius: 50%; background: #F4F2FF; color: #4318FF; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 800;">${initials}</div>
-                  <span>${o.customer_name}</span>
-                </div>
-              </td>
-              <td><strong>${formatLKR(o.total_amount)}</strong></td>
-              <td><span class="hz-pill-badge ${badgeClass}">${o.order_status.replace(/_/g, ' ')}</span></td>
-              <td style="color: #A3AED0; font-size: 0.82rem;">${formatDateOnly(o.created_at)}</td>
-            </tr>
-          `;
-        }).join('');
+      // Revenue monthly growth indicator
+      const trendEl = document.getElementById('stat-revenue-trend');
+      if (trendEl && data.stats.monthly_growth !== undefined) {
+        const isPos = data.stats.monthly_growth >= 0;
+        trendEl.innerHTML = `
+          <svg style="width: 13px; height: 13px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            ${isPos ? '<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>' : '<polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/>'}
+          </svg>
+          <span>${isPos ? '+' : ''}${data.stats.monthly_growth}% this month</span>
+        `;
+        trendEl.style.color = isPos ? '#01B574' : '#EE5D50';
       }
 
+      // Recent Orders widget
+      const ordersContainer = document.getElementById('dashboard-recent-orders');
+      if (ordersContainer) {
+        if (!data.recent_orders || data.recent_orders.length === 0) {
+          ordersContainer.innerHTML = `
+            <tr>
+              <td colspan="5" style="text-align: center; padding: 2.5rem 1rem; color: #A3AED0; font-weight: 600;">
+                <div style="font-size: 1.5rem; margin-bottom: 4px;">📦</div>
+                <div>No orders recorded yet</div>
+              </td>
+            </tr>
+          `;
+        } else {
+          ordersContainer.innerHTML = data.recent_orders.map(o => {
+            const initials = (o.customer_name || 'Guest').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+            let badgeClass = 'hz-pill-brand';
+            const statusLower = (o.order_status || '').toLowerCase();
+            if (['paid', 'delivered', 'completed'].includes(statusLower)) badgeClass = 'hz-pill-success';
+            else if (['pending', 'processing', 'handed_to_courier'].includes(statusLower)) badgeClass = 'hz-pill-warning';
+            else if (['cancelled', 'returned', 'failed'].includes(statusLower)) badgeClass = 'hz-pill-danger';
+
+            return `
+              <tr style="cursor: pointer;" onclick="window.location.href='/admin/orders'">
+                <td><span class="hz-order-badge">#${o.order_number}</span></td>
+                <td>
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 30px; height: 30px; border-radius: 50%; background: #F4F2FF; color: #4318FF; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 800;">${initials}</div>
+                    <span style="font-weight: 600; color: #1B2559;">${o.customer_name}</span>
+                  </div>
+                </td>
+                <td><strong>${formatLKR(o.total_amount)}</strong></td>
+                <td><span class="hz-pill-badge ${badgeClass}">${o.order_status.replace(/_/g, ' ')}</span></td>
+                <td style="color: #A3AED0; font-size: 0.82rem;">${formatDateOnly(o.created_at)}</td>
+              </tr>
+            `;
+          }).join('');
+        }
+      }
+
+      // Low Stock widget
       const lowStockContainer = document.getElementById('dashboard-lowstock-items');
-      if (lowStockContainer && data.low_stock_items) {
-        if (data.low_stock_items.length === 0) {
+      if (lowStockContainer) {
+        if (!data.low_stock_items || data.low_stock_items.length === 0) {
           lowStockContainer.innerHTML = `
-            <div style="text-align: center; padding: 2rem 1rem; color: #05CD99; font-weight: 700;">
-              <svg style="width: 32px; height: 32px; margin-bottom: 6px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <div style="text-align: center; padding: 2.5rem 1rem; color: #01B574; font-weight: 700;">
+              <svg style="width: 36px; height: 36px; margin-bottom: 6px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                 <polyline points="22 4 12 14.01 9 11.01" />
               </svg>
-              <div>All stock levels optimal</div>
+              <div>All stock levels optimal!</div>
+              <p style="font-size: 0.78rem; color: #A3AED0; font-weight: 500; margin-top: 4px;">No products below threshold</p>
             </div>
           `;
         } else {
           lowStockContainer.innerHTML = data.low_stock_items.map(p => `
-            <div class="hz-stock-item">
+            <div class="hz-stock-item" style="cursor: pointer;" onclick="window.location.href='/admin/products?search=${encodeURIComponent(p.name)}'" title="Click to view & restock">
               <div>
-                <div class="hz-stock-name">${p.name}</div>
-                <div class="hz-stock-meta">Alert threshold: ${p.min_stock_alert}</div>
+                <div class="hz-stock-name" style="font-weight: 700; color: #1B2559;">${p.name}</div>
+                <div class="hz-stock-meta" style="color: #A3AED0; font-size: 0.75rem;">Min Alert: ${p.min_stock_alert}</div>
               </div>
-              <div style="text-align: right;">
+              <div style="text-align: right; display: flex; align-items: center; gap: 8px;">
                 <span class="hz-pill-badge hz-pill-danger">${p.quantity} Left</span>
+                <span style="font-size: 0.75rem; color: #4318FF; font-weight: 700;">Restock →</span>
               </div>
             </div>
           `).join('');
@@ -1310,6 +1341,35 @@ async function initAdminDashboard() {
     }
   } catch (err) {
     console.error('Error initializing admin dashboard:', err);
+  }
+
+  // Dashboard search bar listener
+  const searchInput = document.querySelector('.hz-search-input');
+  if (searchInput && !searchInput.dataset.bound) {
+    searchInput.dataset.bound = 'true';
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const val = searchInput.value.trim();
+        if (!val) return;
+        if (/^(#|FELLIRO|\d)/i.test(val)) {
+          window.location.href = `/admin/orders?search=${encodeURIComponent(val)}`;
+        } else {
+          window.location.href = `/admin/products?search=${encodeURIComponent(val)}`;
+        }
+      }
+    });
+
+    searchInput.addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      const rows = document.querySelectorAll('#dashboard-recent-orders tr');
+      rows.forEach(r => {
+        if (!q) {
+          r.style.display = '';
+        } else {
+          r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
+        }
+      });
+    });
   }
 
   if (typeof Chart !== 'undefined') {
@@ -1323,20 +1383,26 @@ async function loadDashboardCharts() {
     const data = await res.json();
 
     if (data.success) {
+      // 1. Sales Trend Line Chart
       const salesCtx = document.getElementById('chart-sales-trend');
       if (salesCtx) {
+        if (salesTrendChartInstance) {
+          salesTrendChartInstance.destroy();
+          salesTrendChartInstance = null;
+        }
+
         const ctx = salesCtx.getContext('2d');
         const gradient = ctx.createLinearGradient(0, 0, 0, 240);
         gradient.addColorStop(0, 'rgba(67, 24, 255, 0.35)');
         gradient.addColorStop(1, 'rgba(67, 24, 255, 0.0)');
 
-        new Chart(salesCtx, {
+        salesTrendChartInstance = new Chart(salesCtx, {
           type: 'line',
           data: {
-            labels: data.salesTrends.map(d => new Date(d.date).toLocaleDateString('en-LK', { month: 'short', day: 'numeric' })),
+            labels: (data.salesTrends || []).map(d => new Date(d.date).toLocaleDateString('en-LK', { month: 'short', day: 'numeric' })),
             datasets: [{
               label: 'Daily Revenue (LKR)',
-              data: data.salesTrends.map(d => d.revenue),
+              data: (data.salesTrends || []).map(d => d.revenue),
               borderColor: '#4318FF',
               borderWidth: 3,
               backgroundColor: gradient,
@@ -1360,7 +1426,10 @@ async function loadDashboardCharts() {
                 bodyColor: '#A3AED0',
                 padding: 12,
                 cornerRadius: 10,
-                displayColors: false
+                displayColors: false,
+                callbacks: {
+                  label: (ctx) => `Revenue: ${formatLKR(ctx.parsed.y)}`
+                }
               }
             },
             scales: {
@@ -1370,22 +1439,38 @@ async function loadDashboardCharts() {
               },
               y: {
                 grid: { color: 'rgba(163, 174, 208, 0.15)', borderDash: [4, 4], drawBorder: false },
-                ticks: { color: '#A3AED0', font: { family: 'Plus Jakarta Sans', weight: '600', size: 11 } }
+                ticks: { 
+                  color: '#A3AED0', 
+                  font: { family: 'Plus Jakarta Sans', weight: '600', size: 11 },
+                  callback: (val) => 'Rs. ' + val.toLocaleString()
+                }
               }
             }
           }
         });
       }
 
+      // 2. Category Share Doughnut Chart
       const categoryCtx = document.getElementById('chart-category-share');
       if (categoryCtx) {
-        new Chart(categoryCtx, {
+        if (categoryShareChartInstance) {
+          categoryShareChartInstance.destroy();
+          categoryShareChartInstance = null;
+        }
+
+        const catData = data.categoryShare && data.categoryShare.length > 0 ? data.categoryShare : [
+          { category_name: 'Dresses', total_sold: 1 },
+          { category_name: 'Tops', total_sold: 1 },
+          { category_name: 'Bottoms', total_sold: 1 }
+        ];
+
+        categoryShareChartInstance = new Chart(categoryCtx, {
           type: 'doughnut',
           data: {
-            labels: data.categoryShare.map(c => c.category_name),
+            labels: catData.map(c => c.category_name),
             datasets: [{
-              data: data.categoryShare.map(c => c.total_sold || 1),
-              backgroundColor: ['#4318FF', '#6AD2FF', '#05CD99', '#FFB547', '#EE5D50'],
+              data: catData.map(c => Math.max(c.total_sold || 0, c.product_count || 1)),
+              backgroundColor: ['#4318FF', '#3B82F6', '#01B574', '#FFB547', '#EE5D50', '#8B5CF6'],
               borderWidth: 0,
               hoverOffset: 4
             }]

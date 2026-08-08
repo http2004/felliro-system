@@ -40,11 +40,8 @@ require('dotenv').config();
 // ─────────────────────────────────────────────
 // Gemini AI Setup (Preserves user's configured model)
 // ─────────────────────────────────────────────
-const apiKey = process.env.GEMINI_API_KEY || 'AIzaSyDummy';
-const genAI = new GoogleGenerativeAI(apiKey);
-const modelName = process.env.GEMINI_MODEL || 'gemini-2.0-flash-lite';
-const model = genAI.getGenerativeModel({ model: modelName });
-
+const apiKey = process.env.GEMINI_API_KEY || '';
+const modelName = process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite';
 console.log(`🤖 AI Engine configured with model: ${modelName}`);
 
 // ─────────────────────────────────────────────
@@ -789,107 +786,57 @@ async function buildSystemPrompt(phone, conv, userMessage) {
 
   const isFirstInteraction = (!conv.messageHistory || conv.messageHistory.length <= 1);
 
-  return `You are "ශාශා (Shasha)", the friendly, charming, stylish AI fashion consultant for "FelliRo" — Sri Lanka's leading women's clothing boutique.
+  return `You are "ශාශා (Shasha)", the friendly, stylish, intelligent AI Fashion Consultant for "FelliRo" — Sri Lanka's leading boutique for women's clothing.
 
-MANDATORY 5-STEP SALES CONVERSATION FLOW (Follow this strictly):
+CORE BEHAVIOR & GUIDELINES:
+1. NATURAL CONVERSATION:
+   - Talk warmly, charmingly, and naturally in Sinhala, Singlish, or English depending on how the customer speaks.
+   - DO NOT repeat rigid templates or welcome menus in a loop.
+   - If the customer asks questions like "සිංහල පුළුවන්ද?", "හායි", "කොහොමද?", reply naturally and warmly (e.g., "ආයුබෝවන්! ඔව් මට සිංහලෙන් කතා කරන්න පුළුවන්. මම FelliRo හි Fashion Consultant ශාශා. ඔබට අද මොනවගේ ලස්සන ඇඳුම්ද බලන්න ඕනේ? 💕").
 
-══════════════════════════════════════════════════════════════════════
-STEP 1: NEW CUSTOMER GREETING & CATEGORIES INTRODUCTION (3 LANGUAGES)
-══════════════════════════════════════════════════════════════════════
-• When a customer first messages or greets (First Contact / "Hi" / "හායි" / "Hello"):
-• Greet them warmly with the 3-language welcome header, list our active categories, and ask which category they want to explore:
-  "🌸 *Welcome to FelliRo Boutique!* 🌸
-  සාදරයෙන් පිළිගනිමු! | அன்புடன் வரவேற்கிறோம்!
-  
-  මම *ශාශා (Shasha)*, ඔබේ AI Fashion Consultant. 💕
-  
-  ✨ *අපගේ නවතම විලාසිතා Categories:*
-  ${categoriesFormatted}
-  
-  ඔබට බැලීමට අවශ්‍ය කුමන Category එකද? (නම හෝ අංකය එවන්න) 💕"
+2. EXPLORING DESIGNS & CATEGORIES:
+   - If the customer asks to see dresses or designs ("ලස්සන ඇඳුම් ටිකක් බලන්න පුළුවන්ද", "ගවුම් තියෙනවද", "Crop tops පෙන්නන්න", etc.):
+     • If they mention a specific category (${categoriesFormatted}), introduce our collection and append [ACTION:send_category_photos,category=CategoryName] so high-quality photos are sent to WhatsApp.
+     • If they ask generally, mention our available categories and ask what style they are looking for (Casual, Party wear, Work wear, Frocks, etc.).
 
-══════════════════════════════════════════════════════════════════════
-STEP 2: CATEGORY SELECTED -> SHOW PRODUCTS & PHOTOS
-══════════════════════════════════════════════════════════════════════
-• When customer selects or mentions a category (e.g. "Crop Top" or "1" or "Frock" or "Coart"):
-• Introduce the available items in that category with prices, colors and sizes from AVAILABLE PRODUCTS.
-• ALWAYS append [ACTION:send_category_photos,category=CategoryName] so high-quality photos of those dresses are sent to their WhatsApp!
-• Ask: "මෙහි ඇති කැමති ඇඳුම කුමක්ද? (නම හෝ ID අංකය එවන්න) 💕"
+3. SELECTING AN ITEM & CONFIGURING:
+   - When the customer picks an item (by name, design number, ID, or photo):
+     • Check available colors and sizes in AVAILABLE PRODUCTS.
+     • Tell them the price and available colors/sizes, and ask which Color, Size (S/M/L/XL/Free Size), and Quantity they prefer.
+     • You can append [ACTION:send_product_photo,product_id=X] to show that specific dress photo.
 
-══════════════════════════════════════════════════════════════════════
-STEP 3: ITEM SELECTED -> ASK COLOR, SIZE & QUANTITY
-══════════════════════════════════════════════════════════════════════
-• When customer picks an item (e.g., "Crop Top 22", "Frock 1", or quotes/replies to a product photo):
-• Check available colors and sizes in stock for that product from AVAILABLE PRODUCTS.
-• Append [ACTION:send_product_photo,product_id=X] if specific photo is needed.
-• Ask: "✨ *[Product Name]* සඳහා ඔබ කැමති Color එක (Available Colors: [List of available colors for this item]), Size එක (S / M / L / Free Size), සහ ඔබට අවශ්‍ය ප්‍රමාණය (Quantity) කීයද? 💕"
+4. ADDING TO CART & ORDERING:
+   - When the customer gives Color, Size, and Quantity:
+     • Append [ACTION:add_to_cart,product_id=X,size=Y,color=Z,quantity=N].
+     • Confirm that it's added to their cart, mention the Cart Total, and ask if they want to browse more designs or proceed to Bill/Checkout.
 
-══════════════════════════════════════════════════════════════════════
-STEP 4: VARIANT SPECIFIED -> ADD TO CART & ASK "ANYTHING ELSE OR BILL?"
-══════════════════════════════════════════════════════════════════════
-• When customer specifies Color, Size, and Quantity:
-• Append [ACTION:add_to_cart,product_id=X,size=Y,color=Z,quantity=N].
-• Confirm:
-  "🛍️ *[Product Name] (Color: [Color], Size: [Size], Qty: [Qty])* ඔබේ Cart එකට සාර්ථකව එකතු කළා!
-  
-  📦 *Cart Total:* Rs. [CartTotal]
-  
-  ඔබට තව වෙනත් ඇඳුම් හෝ Categories බැලීමට අවශ්‍යද? නැතිනම් මේ සඳහා Order එක Bill කරන්නද? 💕
-  (තව අවශ්‍ය නම් කැමති Category එක කියන්න, නැතිනම් 'Bill කරන්න' හෝ 'Order එක දාන්න' කියන්න)"
+5. CHECKOUT & BILLING:
+   - When the customer says "Bill කරන්න", "Order eka danna", or wants to finalize:
+     • If Name, Phone, Address, City are missing, politely ask for their delivery details.
+     • When details are provided, append [ACTION:update_customer_all,name=X,phone=Y,address=Z,city=C] and [ACTION:confirm_order].
+     • Share the bill summary along with Commercial Bank details (Account: 8029695559, U.I. WIJESINGHE, Commercial Bank Anuradhapura) and request a screenshot of the payment slip.
 
-══════════════════════════════════════════════════════════════════════
-STEP 5: BRANCHING: MORE ITEMS VS BILLING
-══════════════════════════════════════════════════════════════════════
-• IF CUSTOMER WANTS MORE ("තව ඕනි", "තව බලන්න ඕනි", mentions another category):
-  - Loop back to Step 2/3 and show the requested category/items, adding more items to the cart!
-• IF CUSTOMER WANTS TO BILL ("Bill කරන්න", "Order eka danna", "No, that's all", "Checkout"):
-  - Politely request delivery details: Full Name, Contact Number, Delivery Address, City/District.
-  - When details are provided:
-    - Append [ACTION:update_customer_all,name=X,phone=Y,address=Z,city=C] and [ACTION:confirm_order].
-    - Present complete Order Summary:
-      • Customer Name & Delivery Address
-      • Ordered Items Breakdown
-      • Subtotal
-      • Delivery Fee (Calculated based on city/province via Fardar Express)
-      • Grand Total
-      • Commercial Bank Payment Details:
-        - Bank: Commercial Bank
-        - Account Name: U.I. WIJESINGHE
-        - Account Number: 8029695559
-        - Branch: Anuradhapura
-    - Ask them to upload the bank transfer/deposit slip screenshot.
+6. FAQ & STORE INFO:
+   - Location: Anuradhapura showroom + Islandwide delivery.
+   - Delivery: Colombo/Gampaha Rs. 350, other districts Rs. 400-450 via Fardar Express (2-3 days).
+   - Contact / Phone: 071 771 6005.
+   - Tracking: Check RECENT CUSTOMER ORDERS or link https://felliro.com/tracking.
 
-══════════════════════════════════════════════════════════════════════
-STEP 6: RECEIPT CONFIRMATION & TRACKING
-══════════════════════════════════════════════════════════════════════
-• If customer asks about order status, tracking ("Order eka koheda?", "Track my order"): check RECENT CUSTOMER ORDERS and provide real-time status + tracking link: https://felliro.com/tracking.
-• If customer asks about Returns or Exchanges: explain our 7-day hassle-free exchange policy.
-
-DELIVERY CHARGES BY REGION (Fardar Express Courier):
-${regionsList}
-
-ACTIVE CATEGORIES IN STORE:
-${categoriesFormatted}
-
-AVAILABLE PRODUCTS & VARIANTS IN DATABASE:
+AVAILABLE STORE DATA:
+• Active Categories: ${categoriesFormatted}
+• Available Products & Variants:
 ${productsList}
 
-CUSTOMER'S CART & ORDER STATE:
-• First Contact: ${isFirstInteraction ? 'Yes' : 'No'}
+CUSTOMER STATE:
 • Cart Items: ${cartSummary}
-• Items Total: Rs. ${cartTotal.toFixed(2)}
-• Delivery Fee: Rs. ${deliveryFee.toFixed(2)}
-• Grand Total: Rs. ${grandTotal.toFixed(2)}
+• Cart Total: Rs. ${cartTotal.toFixed(2)}
 • Customer Name: ${conv.customerData.name || 'Not provided'}
-• Customer Phone: ${conv.customerData.phone || 'Not provided'}
-• Customer Address: ${conv.customerData.address || 'Not provided'}
 • Customer City: ${conv.customerData.city || 'Not provided'}
-• Active Order Number: ${conv.orderNumber || 'Pending'}
-
-RECENT CUSTOMER ORDERS:
+• Active Order: ${conv.orderNumber || 'None'}
+• Recent Orders:
 ${recentOrdersContext}
 
-AVAILABLE ACTIONS (Add to the end of your response when needed):
+AVAILABLE ACTIONS (Place at the end of your response when taking an action):
 [ACTION:send_category_photos,category=CategoryName]
 [ACTION:send_product_photo,product_id=X]
 [ACTION:send_product_photos]
@@ -906,8 +853,17 @@ CUSTOMER'S MESSAGE: "${userMessage}"`;
 // ─────────────────────────────────────────────
 async function callGemini(systemPrompt, history = []) {
   try {
+    const rawApiKey = process.env.GEMINI_API_KEY || '';
+    if (!rawApiKey || rawApiKey === 'AIzaSyDummy') {
+      return null;
+    }
+
+    const currentGenAI = new GoogleGenerativeAI(rawApiKey);
+    const activeModel = process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite';
+    const targetModel = currentGenAI.getGenerativeModel({ model: activeModel });
+
     const list = Array.isArray(history) ? history : [];
-    let historyForApi = list.slice(-10).map(h => ({
+    let historyForApi = list.slice(-8).map(h => ({
       role: h.role === 'assistant' || h.role === 'model' ? 'model' : 'user',
       parts: [{ text: h.text || h.content || '' }]
     })).filter(h => h.parts[0].text);
@@ -916,7 +872,7 @@ async function callGemini(systemPrompt, history = []) {
       historyForApi.shift();
     }
 
-    const chat = model.startChat({
+    const chat = targetModel.startChat({
       history: historyForApi,
       generationConfig: { maxOutputTokens: 1000, temperature: 0.65 }
     });
@@ -924,40 +880,523 @@ async function callGemini(systemPrompt, history = []) {
     const result = await chat.sendMessage(systemPrompt);
     return result.response.text();
   } catch (err) {
-    console.error('Gemini AI call error:', err.message);
-    return 'ආයුබෝවන්! FelliRo Boutique වෙත සාදරයෙන් පිළිගනිමු. 💕 ඔබට අවශ්‍ය ඇඳුම්, මිල ගණන් හෝ Categories පිළිබඳව මට කියන්න, මම ඔබට උදව් කරන්නම්! ✨';
+    console.error('Gemini AI call note:', err.message);
+    return null;
   }
+}
+
+// ─────────────────────────────────────────────
+// Local Rule-Based Engine (Shasha Core)
+// Guarantees 100% reliable 5-step sales flow when AI is unavailable
+// ─────────────────────────────────────────────
+async function handleLocalRuleBasedFlow(targetJid, phone, rawText, conv) {
+  const text = (rawText || '').trim();
+  const lowerText = text.toLowerCase();
+  const { categories, products, variants, regions } = await getCachedCatalog();
+
+  // 0. Human Agent Assistance Request Check
+  if (
+    lowerText.includes('agent') ||
+    lowerText.includes('human') ||
+    lowerText.includes('සහයක්') ||
+    lowerText.includes('සහාය') ||
+    lowerText.includes('help') ||
+    lowerText.includes('කතා කරන්න') ||
+    lowerText.includes('call') ||
+    lowerText.includes('support') ||
+    lowerText.includes('owner') ||
+    lowerText.includes('manager')
+  ) {
+    stateManager.setState(phone, stateManager.STATES.HUMAN_HANDOFF);
+    const agentMsg = `👩‍💼 *FelliRo Human Support Team* 👩‍💼\n\nඔබගේ පණිවිඩය අපගේ පාරිභෝගික සේවා කණ්ඩායම වෙත යොමු කරන ලදී. අපගේ නිලධාරියෙකු සුළු වේලාවකින් ඔබව සම්බන්ධ කරගනු ඇත. 💕\n\n📞 ක්ෂණික සහය සඳහා අප අමතන්න:\n📱 *071 771 6005*\n\nස්තූතියි! ✨`;
+    await sendMessage(targetJid || phone, agentMsg);
+    stateManager.addMessageToHistory(phone, 'assistant', agentMsg);
+    return;
+  }
+
+  // 1. Order Tracking Inquiry Check
+  if (
+    lowerText.includes('track') ||
+    lowerText.includes('koheda') && lowerText.includes('order') ||
+    lowerText.includes('order eka') && (lowerText.includes('koheda') || lowerText.includes('status') || lowerText.includes('awada')) ||
+    lowerText.includes('status') ||
+    lowerText.includes('where is my order') ||
+    lowerText.includes('felliro-') ||
+    lowerText.startsWith('ord-')
+  ) {
+    try {
+      const cleanPhone = (phone || '').replace(/[^0-9]/g, '');
+      const [orders] = await db.query(
+        `SELECT order_number, total_amount, order_status, payment_status, tracking_number, created_at 
+         FROM orders 
+         WHERE whatsapp_id LIKE ? OR customer_phone LIKE ? OR order_number LIKE ?
+         ORDER BY id DESC LIMIT 1`,
+        [`%${cleanPhone}%`, `%${cleanPhone}%`, `%${text.trim()}%`]
+      );
+
+      if (orders.length > 0) {
+        const ord = orders[0];
+        const statusMap = {
+          pending: '⏳ Pending (අපගේ කණ්ඩායම විසින් ගෙවීම් පරීක්ෂා කරමින් පවතී)',
+          processing: '📦 Processing (ඇසුරුම් කරමින් පවතී)',
+          shipped: '🚚 Dispatched / Shipped (කුරියර් සේවාව වෙත භාර දී ඇත)',
+          delivered: '✅ Delivered (භාණ්ඩය සාර්ථකව බෙදාහැර ඇත)',
+          cancelled: '❌ Cancelled (අවලංගු කර ඇත)'
+        };
+        const stText = statusMap[ord.order_status] || ord.order_status;
+        const msg = `📦 *Order Tracking Status: #${ord.order_number}* 📦\n\n🔹 *වත්මන් තත්ත්වය:* ${stText}\n🔹 *Payment Status:* ${ord.payment_status}\n🔹 *Tracking Number:* ${ord.tracking_number || 'තවම නිකුත් කර නැත'}\n🔹 *Total Amount:* Rs. ${parseFloat(ord.total_amount).toFixed(2)}\n\n📄 වැඩිදුර විස්තර සඳහා පිවිසෙන්න:\n🔗 https://felliro.com/tracking\n\nඔබට තව යමක් දැනගැනීමට අවශ්‍යද? 💕`;
+        await sendMessage(targetJid || phone, msg);
+        stateManager.addMessageToHistory(phone, 'assistant', msg);
+        return;
+      }
+    } catch(e) {
+      console.warn('Tracking query error:', e.message);
+    }
+  }
+
+  // 2. Returns & Exchanges Inquiry Check
+  if (
+    lowerText.includes('return') ||
+    lowerText.includes('exchange') ||
+    lowerText.includes('maru karanna') ||
+    lowerText.includes('maru karaganna') ||
+    lowerText.includes('damage') ||
+    lowerText.includes('defect') ||
+    lowerText.includes('size madi') ||
+    lowerText.includes('size wadi')
+  ) {
+    const returnMsg = `🌸 *FelliRo Exchange & Return Policy* 🌸\n\nඔබට ලැබුණු භාණ්ඩයේ කිසියම් Size ගැටලුවක් හෝ Damage එකක් ඇත්නම්, භාණ්ඩය ලැබී දින 7ක් ඇතුළත ඉතා පහසුවෙන් Exchange කරගත හැක. 💕\n\n1️⃣ භාණ්ඩයේ Photo එකක් අප වෙත එවන්න.\n2️⃣ ඔබට අවශ්‍ය අලුත් Size එක හෝ වෙනත් Design එක අපට දන්වන්න.\n3️⃣ අපගේ කණ්ඩායම පැය කිහිපයක් ඇතුළත ඔබව සම්බන්ධ කරගනු ඇත. ✨\n\n_අපගේ පාරිභෝගික සේවාව: 071 771 6005_ 💖`;
+    await sendMessage(targetJid || phone, returnMsg);
+    stateManager.addMessageToHistory(phone, 'assistant', returnMsg);
+    return;
+  }
+
+  // 3. FAQs & Common Questions (Store location, Delivery, COD, Bank Details, Contact)
+  if (
+    (lowerText.includes('shop') || lowerText.includes('kade') || lowerText.includes('store') || lowerText.includes('location') || lowerText.includes('address') || lowerText.includes('koheda thiyenne') || lowerText.includes('thiyenne koheda')) &&
+    !lowerText.includes('order')
+  ) {
+    const shopMsg = `🏬 *FelliRo Boutique Location & Delivery* 🏬\n\nඅපගේ ප්‍රධාන ශාඛාව *අනුරාධපුරය (Anuradhapura)* නගරයේ පිහිටා ඇති අතර, දිවයිනේ ඕනෑම ප්‍රදේශයකට *Fardar Express* මඟින් ඉතා ආරක්ෂිතව භාණ්ඩ නිවසටම ගෙන්වා ගත හැක! 🚚✨\n\n📍 *Showroom:* Anuradhapura, Sri Lanka\n🌐 *Website:* https://felliro.com\n📞 *Hotline:* 071 771 6005\n\nඔබට ඇඳුම් Designs බැලීමට අවශ්‍යද? 💕`;
+    await sendMessage(targetJid || phone, shopMsg);
+    stateManager.addMessageToHistory(phone, 'assistant', shopMsg);
+    return;
+  }
+
+  if (
+    lowerText.includes('delivery fee') ||
+    lowerText.includes('delivery charge') ||
+    lowerText.includes('delivery keeyada') ||
+    lowerText.includes('delivery cost') ||
+    lowerText.includes('shipping') ||
+    lowerText.includes('dawas keeyak') ||
+    lowerText.includes('how many days') ||
+    lowerText.includes('deliver karanna')
+  ) {
+    const delMsg = `🚚 *FelliRo Delivery Information (Fardar Express)* 🚚\n\n🔹 *කොළඹ & ගම්පහ:* රු. 350/=\n🔹 *අනෙකුත් සියලුම දිස්ත්‍රික්ක:* රු. 400/= - 450/=\n⏱️ *කාලය:* Order එක තහවුරු කර දින 2-3ක් ඇතුළත ඔබේ නිවසටම ලැබෙනු ඇත. ✨\n\nඔබට කැමති ඇඳුම් වර්ගයක් තෝරා ගැනීමට අපගේ Categories පෙන්වන්නද? 💕`;
+    await sendMessage(targetJid || phone, delMsg);
+    stateManager.addMessageToHistory(phone, 'assistant', delMsg);
+    return;
+  }
+
+  if (
+    lowerText.includes('cod') ||
+    lowerText.includes('cash on delivery') ||
+    lowerText.includes('payment method') ||
+    lowerText.includes('gewanna puluwan') ||
+    lowerText.includes('salli gewanna')
+  ) {
+    const payMsg = `💳 *FelliRo Payment Methods* 💳\n\nදැනට අපගේ සියලුම Orders සඳහා ගෙවීම් සිදු කරනු ලබන්නේ *Commercial Bank Online Transfer* හෝ *Bank Deposit* මඟිනි. 💕\n_(ගෙවීම සිදු කළ පසු Slip පතේ Photo එකක් අප වෙත එවූ වහාම පාර්සලය Dispatch කරනු ලැබේ)_ ✨\n\n🏦 *Commercial Bank Details:*\n• Account Name: *U.I. WIJESINGHE*\n• Account Number: *8029695559*\n• Branch: *Anuradhapura*\n\nඔබට Order එකක් දැමීමට අවශ්‍යද? 💕`;
+    await sendMessage(targetJid || phone, payMsg);
+    stateManager.addMessageToHistory(phone, 'assistant', payMsg);
+    return;
+  }
+
+  if (
+    lowerText.includes('bank details') ||
+    lowerText.includes('account number') ||
+    lowerText.includes('acc no') ||
+    lowerText.includes('bank account')
+  ) {
+    const bankMsg = `🏦 *FelliRo Official Bank Details* 🏦\n\n• Bank: *Commercial Bank*\n• Account Name: *U.I. WIJESINGHE*\n• Account Number: *8029695559*\n• Branch: *Anuradhapura*\n\nගෙවීම සිදු කර Transfer / Deposit Slip එකේ Photo එකක් මෙතැනට එවන්න. 💕`;
+    await sendMessage(targetJid || phone, bankMsg);
+    stateManager.addMessageToHistory(phone, 'assistant', bankMsg);
+    return;
+  }
+
+  if (
+    lowerText.includes('hotline') ||
+    lowerText.includes('phone number') ||
+    lowerText.includes('number eka') ||
+    lowerText.includes('contact number') ||
+    lowerText.includes('call karanna')
+  ) {
+    const contactMsg = `📞 *FelliRo Contact Details* 📞\n\n📱 *Customer Care:* 071 771 6005\n💬 *WhatsApp:* 071 771 6005\n🌐 *Website:* https://felliro.com\n\nඔබට වෙනත් යමක් දැනගැනීමට අවශ්‍යද? 💕`;
+    await sendMessage(targetJid || phone, contactMsg);
+    stateManager.addMessageToHistory(phone, 'assistant', contactMsg);
+    return;
+  }
+
+  // 4. Checkout / Bill Request Check
+  if (
+    lowerText === 'bill' ||
+    lowerText === 'checkout' ||
+    lowerText.includes('bill karanna') ||
+    lowerText.includes('bill eka') ||
+    lowerText.includes('order eka danna') ||
+    lowerText.includes('order danna') ||
+    lowerText.includes('order karanna') ||
+    lowerText.includes('buy now')
+  ) {
+    if (conv.cart.length === 0) {
+      const emptyMsg = `🛍️ ඔබේ Cart එක දැනට හිස්ව පවතී. 💕\n\nකරුණාකර පහත Categories වලින් ඔබට අවශ්‍ය එකක් තෝරා ඇඳුමක් Cart එකට එකතු කරන්න: ✨\n\n${categories.map((c, i) => `${i + 1}️⃣ *${c.name}*`).join('\n')}`;
+      await sendMessage(targetJid || phone, emptyMsg);
+      stateManager.addMessageToHistory(phone, 'assistant', emptyMsg);
+      return;
+    }
+
+    stateManager.setState(phone, stateManager.STATES.COLLECTING_DETAILS);
+    const billPrompt = `📦 *Order එක සම්පූර්ණ කිරීමට පහත විස්තර අපට එවන්න:* 💕\n\n1️⃣ සම්පූර්ණ නම (Full Name):\n2️⃣ දුරකථන අංකය (Phone Number):\n3️⃣ බෙදාහැරීමේ ලිපිනය (Delivery Address):\n4️⃣ නගරය / දිස්ත්‍රික්කය (City / District):\n\n_(කරුණාකර මේ පණිවිඩයට පිළිතුරු ලෙස ඔබේ විස්තර එවන්න)_ ✨`;
+    await sendMessage(targetJid || phone, billPrompt);
+    stateManager.addMessageToHistory(phone, 'assistant', billPrompt);
+    return;
+  }
+
+  // 5. Delivery Details Submission (If in COLLECTING_DETAILS state or text contains customer address info)
+  const isDetailsFormat = (
+    conv.state === stateManager.STATES.COLLECTING_DETAILS ||
+    (lowerText.includes('address') || lowerText.includes('colombo') || lowerText.includes('kandy') || lowerText.includes('galle') || lowerText.includes('road') || lowerText.includes('street') || /\d{9,10}/.test(text))
+  );
+
+  if (isDetailsFormat && conv.cart.length > 0 && !conv.orderId) {
+    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+    let parsedName = '';
+    let parsedPhone = '';
+    let parsedAddress = '';
+    let parsedCity = '';
+
+    for (const line of lines) {
+      const phoneMatch = line.match(/(?:0|\+?94)?(7\d{8})/);
+      if (phoneMatch && !parsedPhone) {
+        parsedPhone = phoneMatch[0];
+      }
+
+      if (/name|නම/i.test(line)) {
+        parsedName = line.replace(/.*(?:name|නම)[\:\-\s]*/i, '').trim();
+      } else if (/address|ලිපිනය/i.test(line)) {
+        parsedAddress = line.replace(/.*(?:address|ලිපිනය)[\:\-\s]*/i, '').trim();
+      } else if (/city|district|නගරය|දිස්ත්‍රික්කය/i.test(line)) {
+        parsedCity = line.replace(/.*(?:city|district|නගරය|දිස්ත්‍රික්කය)[\:\-\s]*/i, '').trim();
+      }
+    }
+
+    if (!parsedName && lines.length > 0 && !/\d{5,}/.test(lines[0])) parsedName = lines[0];
+    if (!parsedPhone) {
+      const m = text.match(/(?:0|\+?94)?(7\d{8})/);
+      parsedPhone = m ? m[0] : phone;
+    }
+    if (!parsedAddress && lines.length >= 3) {
+      parsedAddress = lines.slice(2).join(', ');
+    } else if (!parsedAddress) {
+      parsedAddress = text;
+    }
+
+    if (!parsedCity) {
+      for (const r of regions) {
+        if (text.toLowerCase().includes(r.name.toLowerCase())) {
+          parsedCity = r.name;
+          break;
+        }
+      }
+    }
+    if (!parsedCity) parsedCity = 'Colombo';
+
+    stateManager.setCustomerData(phone, {
+      name: parsedName || 'WhatsApp Customer',
+      phone: parsedPhone || phone,
+      address: parsedAddress || 'Home Delivery',
+      city: parsedCity
+    });
+
+    const orderRes = await createOrderFromBot(targetJid, phone);
+    if (orderRes.success) {
+      conv.orderId = orderRes.orderId;
+      conv.orderNumber = orderRes.orderNumber;
+      stateManager.setState(phone, stateManager.STATES.AWAITING_RECEIPT);
+
+      const deliveryFee = calculateDeliveryFee(parsedCity, '', regions);
+      const subtotal = stateManager.getCartTotal(phone);
+      const grandTotal = subtotal + deliveryFee;
+
+      const itemsList = conv.cart.map(i => `• *${i.name}* (${i.color || '-'} / ${i.size || '-'}) x ${i.quantity} = Rs. ${(i.price * i.quantity).toFixed(2)}`).join('\n');
+
+      const billMsg = `🎉 *Order Confirmed! (#${orderRes.orderNumber})* 🎉\n\n👤 *Customer:* ${parsedName || 'Valued Customer'}\n📞 *Phone:* ${parsedPhone || phone}\n📍 *Delivery Address:* ${parsedAddress}, ${parsedCity}\n\n🛍️ *Ordered Items:*\n${itemsList}\n\n💵 *Items Subtotal:* Rs. ${subtotal.toFixed(2)}\n🚚 *Delivery Fee (Fardar Express):* Rs. ${deliveryFee.toFixed(2)}\n💰 *Grand Total:* Rs. ${grandTotal.toFixed(2)}\n\n══════════════════════════════\n🏦 *Bank Payment Details (Commercial Bank):*\n• Bank: *Commercial Bank*\n• Account Name: *U.I. WIJESINGHE*\n• Account Number: *8029695559*\n• Branch: *Anuradhapura*\n══════════════════════════════\n\n📸 කරුණාකර ගෙවීම සිදු කර Transfer / Deposit Slip එකේ Photo / Screenshot එකක් මෙතැනට එවන්න. 💕\n\n_ස්තූතියි!_ 💖`;
+
+      await sendMessage(targetJid || phone, billMsg);
+      stateManager.addMessageToHistory(phone, 'assistant', billMsg);
+      return;
+    }
+  }
+
+  // 6. Branching in ASKING_MORE_OR_BILL State
+  if (conv.state === stateManager.STATES.ASKING_MORE_OR_BILL) {
+    if (
+      lowerText.includes('more') ||
+      lowerText.includes('thawa') ||
+      lowerText.includes('තව') ||
+      lowerText.includes('twa') ||
+      lowerText.includes('other') ||
+      lowerText.includes('category') ||
+      lowerText.includes('designs') ||
+      lowerText.includes('balanna')
+    ) {
+      let catsListStr = categories.map((c, idx) => {
+        const prodsInCat = products.filter(p => p.category_id === c.id && p.quantity > 0);
+        return `${idx + 1}️⃣ *${c.name}* (${prodsInCat.length} designs available)`;
+      }).join('\n');
+
+      const moreMsg = `✨ *අපගේ අනෙකුත් Categories:*\n\n${catsListStr}\n\nඔබට බැලීමට අවශ්‍ය Category එක කුමක්ද? (නම හෝ අංකය එවන්න) 💕`;
+      stateManager.setState(phone, stateManager.STATES.SELECTING_CATEGORY);
+      await sendMessage(targetJid || phone, moreMsg);
+      stateManager.addMessageToHistory(phone, 'assistant', moreMsg);
+      return;
+    }
+  }
+
+  // 7. Product Selection Check (PRIORITY: Exact Product Name or Specific Product ID or Item in Current Category)
+  let matchedProduct = null;
+
+  // 7a. Exact or near match by Product Name (e.g. "Crop Top 1", "Frock 2", "Coart 3", "Night Dress 1")
+  matchedProduct = products.find(p => p.name.toLowerCase() === lowerText);
+
+  // 7b. Match by Product ID (e.g. "ID:61", "61", "#61")
+  if (!matchedProduct) {
+    const idMatch = text.match(/(?:id[\:\s#]*)(\d+)/i);
+    if (idMatch) {
+      const pid = parseInt(idMatch[1]);
+      matchedProduct = products.find(p => p.id === pid && p.quantity > 0);
+    }
+  }
+
+  // 7c. In BROWSING_CATEGORY state, if user sends a number 1-8, pick the N-th product in that category!
+  if (!matchedProduct && conv.state === stateManager.STATES.BROWSING_CATEGORY && conv.currentCategory) {
+    const catObj = categories.find(c => c.name.toLowerCase() === conv.currentCategory.toLowerCase());
+    if (catObj) {
+      const catProds = products.filter(p => p.category_id === catObj.id && p.quantity > 0);
+      const choiceNum = parseInt(text);
+      if (!isNaN(choiceNum) && choiceNum >= 1 && choiceNum <= catProds.length) {
+        matchedProduct = catProds[choiceNum - 1];
+      }
+    }
+  }
+
+  // 7d. Substring product name match (e.g. "frock 3", "crop top 2", "coart 1")
+  if (!matchedProduct) {
+    for (const p of products) {
+      if (lowerText.includes(p.name.toLowerCase()) && p.quantity > 0) {
+        matchedProduct = p;
+        break;
+      }
+    }
+  }
+
+  // 7e. Digits only direct ID match if >= 10
+  if (!matchedProduct) {
+    const digitsOnly = text.replace(/[^0-9]/g, '');
+    if (digitsOnly && digitsOnly.length >= 2 && digitsOnly.length <= 4) {
+      const directId = parseInt(digitsOnly);
+      matchedProduct = products.find(p => p.id === directId && p.quantity > 0);
+    }
+  }
+
+  if (matchedProduct) {
+    conv.pendingProduct = matchedProduct;
+    stateManager.setState(phone, stateManager.STATES.CONFIGURING_ITEM);
+
+    const prodVars = variants.filter(v => v.product_id === matchedProduct.id && v.quantity > 0);
+    const colors = [...new Set(prodVars.map(v => v.color).filter(c => c && c !== '-'))].join(', ') || 'Standard';
+    const sizes = [...new Set(prodVars.map(v => v.size).filter(s => s && s !== '-'))].join(', ') || 'Free Size';
+
+    if (matchedProduct.image_url) {
+      await sendProductWithImage(
+        targetJid || phone,
+        matchedProduct.image_url,
+        `✨ *[ID:${matchedProduct.id}] ${matchedProduct.name}*\n💰 *Rs. ${parseFloat(matchedProduct.price).toFixed(2)}*`
+      );
+    }
+
+    const askVariantMsg = `✨ *${matchedProduct.name}* (Rs. ${parseFloat(matchedProduct.price).toFixed(2)})\n\n🎨 *Available Colors:* ${colors}\n📏 *Available Sizes:* ${sizes}\n\nඔබ කැමති Color එක, Size එක, සහ ඔබට අවශ්‍ය ප්‍රමාණය (Quantity) කීයද? 💕\n\n_(උදා: ${colors.split(',')[0].trim() || 'Pink'} 1 හෝ White 2)_`;
+    await sendMessage(targetJid || phone, askVariantMsg);
+    stateManager.addMessageToHistory(phone, 'assistant', askVariantMsg);
+    return;
+  }
+
+  // 8. Configuring Item (Customer specifying Color / Size / Qty)
+  const isColorOrSizeMentioned = (
+    /\b(pink|black|white|red|blue|yellow|green|maroon|purple|beige|brown|rose|grey|gray|cream|navy|standard)\b/i.test(lowerText) ||
+    /\b(s|m|l|xl|xxl|small|medium|large|free size)\b/i.test(lowerText) ||
+    lowerText.includes('පාට') || lowerText.includes('සයිස්') || lowerText.includes('කලර්')
+  );
+
+  if (conv.pendingProduct || (conv.state === stateManager.STATES.CONFIGURING_ITEM && (isColorOrSizeMentioned || /\d+/.test(text)))) {
+    const prod = conv.pendingProduct || products[0];
+    const prodVars = variants.filter(v => v.product_id === prod.id && v.quantity > 0);
+
+    const qtyMatch = text.match(/\b([1-9]|10)\b/);
+    const qty = qtyMatch ? parseInt(qtyMatch[1]) : 1;
+
+    let selectedColor = '-';
+    for (const v of prodVars) {
+      if (v.color && lowerText.includes(v.color.toLowerCase())) {
+        selectedColor = v.color;
+        break;
+      }
+    }
+    if (selectedColor === '-' && prodVars.length > 0 && prodVars[0].color) {
+      selectedColor = prodVars[0].color;
+    }
+
+    let selectedSize = 'Free Size';
+    if (/\b(s|small)\b/i.test(text)) selectedSize = 'S';
+    else if (/\b(m|medium)\b/i.test(text)) selectedSize = 'M';
+    else if (/\b(l|large)\b/i.test(text)) selectedSize = 'L';
+    else if (/\b(xl|extra large)\b/i.test(text)) selectedSize = 'XL';
+    else if (/\b(xxl)\b/i.test(text)) selectedSize = 'XXL';
+    else if (prodVars.length > 0 && prodVars[0].size) selectedSize = prodVars[0].size;
+
+    stateManager.addToCart(phone, {
+      product_id: prod.id,
+      name: prod.name,
+      price: parseFloat(prod.price),
+      size: selectedSize,
+      color: selectedColor,
+      quantity: qty
+    });
+
+    conv.pendingProduct = null;
+    stateManager.setState(phone, stateManager.STATES.ASKING_MORE_OR_BILL);
+
+    const cartTotal = stateManager.getCartTotal(phone);
+    const cartAck = `🛍️ *${prod.name} (Color: ${selectedColor}, Size: ${selectedSize}, Qty: ${qty})* ඔබේ Cart එකට සාර්ථකව එකතු කළා! 🎉\n\n📦 *Cart Total:* Rs. ${cartTotal.toFixed(2)}\n\nඔබට තව වෙනත් ඇඳුම් හෝ Categories බැලීමට අවශ්‍යද? නැතිනම් මේ සඳහා Order එක Bill කරන්නද? 💕\n\n_(තව අවශ්‍ය නම් කැමති Category එක කියන්න, නැතිනම් *'Bill කරන්න'* කියන්න)_`;
+
+    await sendMessage(targetJid || phone, cartAck);
+    stateManager.addMessageToHistory(phone, 'assistant', cartAck);
+    return;
+  }
+
+  // 9. Category Selection Check (By Name, Sinhala keyword, or Index 1-5)
+  let matchedCategory = null;
+  const numChoice = parseInt(text);
+  if (!isNaN(numChoice) && numChoice >= 1 && numChoice <= categories.length && (conv.state === stateManager.STATES.SELECTING_CATEGORY || conv.state === stateManager.STATES.IDLE || conv.cart.length === 0)) {
+    matchedCategory = categories[numChoice - 1];
+  } else {
+    matchedCategory = categories.find(c =>
+      c.name.toLowerCase() === lowerText
+    );
+  }
+
+  if (!matchedCategory) {
+    if (lowerText.includes('crop') || lowerText.includes('top') || lowerText.includes('ටොප්')) {
+      matchedCategory = categories.find(c => /crop/i.test(c.name));
+    } else if (lowerText.includes('frock') || lowerText.includes('dress') || lowerText.includes('gauma') || lowerText.includes('gaum') || lowerText.includes('ගවුම') || lowerText.includes('ගවුම්') || lowerText.includes('ඩ්‍රස්')) {
+      matchedCategory = categories.find(c => /frock/i.test(c.name));
+    } else if (lowerText.includes('coat') || lowerText.includes('coart') || lowerText.includes('blazer') || lowerText.includes('කෝට්') || lowerText.includes('බ්ලේසර්')) {
+      matchedCategory = categories.find(c => /coart|coat/i.test(c.name));
+    } else if (lowerText.includes('full kit') || lowerText.includes('fullkit') || lowerText.includes('කිට්') || lowerText.includes('ෆුල් කිට්')) {
+      matchedCategory = categories.find(c => /full/i.test(c.name));
+    } else if (lowerText.includes('night') || lowerText.includes('sleep') || lowerText.includes('nighty') || lowerText.includes('නයිට්') || lowerText.includes('නයිටි')) {
+      matchedCategory = categories.find(c => /night/i.test(c.name));
+    }
+  }
+
+  if (matchedCategory) {
+    conv.currentCategory = matchedCategory.name;
+    stateManager.setState(phone, stateManager.STATES.BROWSING_CATEGORY);
+
+    const catProds = products.filter(p => p.category_id === matchedCategory.id && p.quantity > 0);
+    const topToSend = catProds.slice(0, 8);
+
+    if (topToSend.length > 0) {
+      await sendMessage(targetJid || phone, `✨ *${matchedCategory.name}* Designs ඔබ වෙත එවමින් පවතී... 💕`);
+
+      for (let i = 0; i < topToSend.length; i++) {
+        const p = topToSend[i];
+        if (p.image_url) {
+          const prodVars = variants.filter(v => v.product_id === p.id && v.quantity > 0);
+          const colors = [...new Set(prodVars.map(v => v.color).filter(c => c && c !== '-'))].join(', ') || 'Standard';
+          const sizes = [...new Set(prodVars.map(v => v.size).filter(s => s && s !== '-'))].join(', ') || 'Free Size';
+
+          const caption = `✨ *${i + 1}️⃣ [ID:${p.id}] ${p.name}*\n💰 *Rs. ${parseFloat(p.price).toFixed(2)}*\n🎨 Colors: ${colors}\n📏 Sizes: ${sizes}\n📦 In Stock: ${p.quantity}`;
+          await sendProductWithImage(targetJid || phone, p.image_url, caption);
+          await sleep(350);
+        }
+      }
+
+      const chooseMsg = `✨ ඉහත දැක්වෙන්නේ *${matchedCategory.name}* හි අප සතු අලංකාර Designs වේ. 😍\n\nමෙහි ඇති ඔබ කැමති Design එක කුමක්ද? (නම, ID අංකය, හෝ අංක 1-${topToSend.length} එවන්න) 💕\n_(උදා: ${topToSend[0].name} හෝ 1 හෝ ID:${topToSend[0].id})_`;
+      await sendMessage(targetJid || phone, chooseMsg);
+      stateManager.addMessageToHistory(phone, 'assistant', chooseMsg);
+      return;
+    }
+  }
+
+  // 10. Default Welcome Header with Categories List
+  let catsListStr = categories.map((c, idx) => {
+    const prodsInCat = products.filter(p => p.category_id === c.id && p.quantity > 0);
+    return `${idx + 1}️⃣ *${c.name}* (${prodsInCat.length} designs available)`;
+  }).join('\n');
+
+  if (!catsListStr) {
+    catsListStr = '1️⃣ Crop Top\n2️⃣ Coart\n3️⃣ Frock\n4️⃣ Full Kit\n5️⃣ Night Dress';
+  }
+
+  const welcomeHeader = `🌸 *Welcome to FelliRo Boutique!* 🌸\nසාදරයෙන් පිළිගනිමු! | அன்புடன் வரவேற்கிறோம்!\n\nමම *ශාශා (Shasha)*, ඔබේ AI Fashion Consultant. 💕\n\n✨ *අපගේ නවතම විලාසිතා Categories:*\n${catsListStr}\n\nඔබට බැලීමට අවශ්‍ය කුමන Category එකද? (නම හෝ අංකය එවන්න) 💕`;
+
+  stateManager.setState(phone, stateManager.STATES.SELECTING_CATEGORY);
+  await sendMessage(targetJid || phone, welcomeHeader);
+  stateManager.addMessageToHistory(phone, 'assistant', welcomeHeader);
 }
 
 // ─────────────────────────────────────────────
 // Process User Message & Execute Actions
 // ─────────────────────────────────────────────
 async function processUserMessage(targetJid, phone, text, conv) {
+  const convObj = conv || stateManager.getConversation(phone);
   try {
-    const systemPrompt = await buildSystemPrompt(phone, conv, text);
-    const historyList = conv.messageHistory || [];
+    const systemPrompt = await buildSystemPrompt(phone, convObj, text);
+    const historyList = convObj.messageHistory || [];
     const aiResponse = await callGemini(systemPrompt, historyList);
 
-    const actionMatches = [...aiResponse.matchAll(/\[ACTION:([^\]]+)\]/g)];
-    const cleanReply = aiResponse.replace(/\[ACTION:[^\]]+\]/g, '').trim();
+    if (aiResponse && aiResponse.trim().length > 0) {
+      console.log(`🤖 Gemini 3.5 AI responded for ${phone}`);
+      const actionMatches = [...aiResponse.matchAll(/\[ACTION:([^\]]+)\]/g)];
+      const cleanReply = aiResponse.replace(/\[ACTION:[^\]]+\]/g, '').trim();
 
-    if (cleanReply) {
-      await sendMessage(targetJid || phone, cleanReply);
-      stateManager.addMessageToHistory(phone, 'assistant', cleanReply);
+      if (cleanReply) {
+        await sendMessage(targetJid || phone, cleanReply);
+        stateManager.addMessageToHistory(phone, 'assistant', cleanReply);
+      }
+
+      for (const match of actionMatches) {
+        const actionRaw = match[1];
+        const [actionType, ...paramPairs] = actionRaw.split(',');
+        const params = {};
+        paramPairs.forEach(p => {
+          const [k, v] = p.split('=');
+          if (k && v) params[k.trim()] = v.trim();
+        });
+        await executeAction(targetJid || phone, phone, actionType.trim(), params, convObj);
+      }
+      return;
     }
 
-    for (const match of actionMatches) {
-      const actionRaw = match[1];
-      const [actionType, ...paramPairs] = actionRaw.split(',');
-      const params = {};
-      paramPairs.forEach(p => {
-        const [k, v] = p.split('=');
-        if (k && v) params[k.trim()] = v.trim();
-      });
-      await executeAction(targetJid || phone, phone, actionType.trim(), params, conv);
-    }
+    // AI unavailable fallback
+    console.log(`⚠️ Gemini AI did not return a response for ${phone}: "${text}"`);
+    const fallbackMsg = "🌸 ආයුබෝවන්! FelliRo Boutique වෙත සාදරයෙන් පිළිගනිමු! මම ශාශා (Shasha). ඔබට අද මොනවගේ ඇඳුම්ද බලන්න අවශ්‍ය? 💕";
+    await sendMessage(targetJid || phone, fallbackMsg);
+    stateManager.addMessageToHistory(phone, 'assistant', fallbackMsg);
   } catch (err) {
     console.error('processUserMessage error:', err);
+    const fallbackMsg = "🌸 සමාවෙන්න, මට සුළු තාක්ෂණික බාධාවක් ඇතිවිය. කරුණාකර නැවත ඔබගේ පණිවිඩය එවන්න. 💕";
+    await sendMessage(targetJid || phone, fallbackMsg);
   }
 }
 
@@ -1580,5 +2019,6 @@ module.exports = {
   initBot, isReady, getQrCode, getClient, restartBot, cleanAuthDirectory,
   sendMessage, sendMessageAsAdmin, sendAdminMediaMessage, sendProductWithImage,
   notifyCustomerOrderConfirmed, notifyCustomerOrderCancelled,
-  setBotEnabled, isBotGloballyEnabled, escalateToHuman
+  setBotEnabled, isBotGloballyEnabled, escalateToHuman,
+  processUserMessage, handleLocalRuleBasedFlow, handleIncomingBaileysMessage
 };

@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /invoices/
+Disallow: /temp/
+
+Sitemap: https://www.felliro.com/sitemap.xml

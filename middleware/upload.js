@@ -1,3 +1,6 @@
+const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
 const os = require('os');
 
 // Ensure uploads folder exists safely

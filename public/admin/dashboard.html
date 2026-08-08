@@ -8,7 +8,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>
-  <link rel="icon" href="/images/logo.png" type="image/png">
+  <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
+  <link rel="icon" type="image/png" href="/images/favicon.png">
+  <link rel="apple-touch-icon" href="/images/favicon.png">
   <link rel="stylesheet" href="/css/main.css?v=20260802">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -128,6 +130,14 @@
             <span id="wa-status-text">Checking Bot...</span>
           </div>
 
+          <!-- Refresh Button -->
+          <button class="hz-btn-pill" style="background: #FFFFFF; border: 1.5px solid var(--hz-border); color: var(--hz-navy); cursor: pointer;" onclick="initAdminDashboard(); showToast('Dashboard refreshed!', 'success');" title="Refresh Dashboard Stats">
+            <svg style="width: 15px; height: 15px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+            </svg>
+            Refresh
+          </button>
+
           <!-- Quick Action Buttons -->
           <a href="/admin/orders" class="hz-btn-pill hz-btn-primary">
             <svg style="width: 16px; height: 16px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -160,12 +170,12 @@
           <div>
             <div class="hz-kpi-label">Total Revenue</div>
             <div class="hz-kpi-value" id="stat-revenue">Rs. 0.00</div>
-            <div class="hz-kpi-trend">
+            <div class="hz-kpi-trend" id="stat-revenue-trend">
               <svg style="width: 13px; height: 13px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
                 <polyline points="17 6 23 6 23 12" />
               </svg>
-              <span>+18.2% this month</span>
+              <span>+0% this month</span>
             </div>
           </div>
         </div>
@@ -356,7 +366,7 @@
     </div>
   </div>
 
-  <script src="/js/admin_v2.js?v=20260802_v9"></script>
+  <script src="/js/admin_v2.js?v=20260808_v1"></script>
 </body>
 
 </html>
