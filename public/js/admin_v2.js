@@ -1726,7 +1726,47 @@ async function initAdminProducts() {
 // Admin Orders Handler & Horizon Controller
 let allAdminOrders = [];
 
+function populateDateFilters() {
+  const selects = [document.getElementById('order-date-filter'), document.getElementById('label-date-filter')];
+  
+  const now = new Date();
+  let todayCycleStart = new Date(now);
+  if (now.getHours() < 12) {
+    todayCycleStart.setDate(todayCycleStart.getDate() - 1);
+  }
+  todayCycleStart.setHours(12, 0, 0, 0);
+
+  let optionsHtml = '';
+  for (let i = 0; i < 7; i++) {
+    let cycleStart = new Date(todayCycleStart);
+    cycleStart.setDate(cycleStart.getDate() - i);
+    
+    let cycleEnd = new Date(cycleStart);
+    cycleEnd.setDate(cycleEnd.getDate() + 1);
+
+    const startStr = cycleStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const endStr = cycleEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    
+    let label = '';
+    if (i === 0) label = `Today (${startStr} - ${endStr})`;
+    else if (i === 1) label = `Yesterday (${startStr} - ${endStr})`;
+    else label = `${i} Days Ago (${startStr} - ${endStr})`;
+
+    optionsHtml += `<option value="${i}">${label}</option>`;
+  }
+  optionsHtml += `<option value="ALL">All Time</option>`;
+
+  selects.forEach(select => {
+    if (select) {
+      const currentVal = select.value || '0';
+      select.innerHTML = optionsHtml;
+      select.value = currentVal;
+    }
+  });
+}
+
 async function initAdminOrders() {
+  populateDateFilters();
   const tableBody = document.getElementById('admin-orders-table-body');
   if (!tableBody) return;
 
@@ -1737,8 +1777,12 @@ async function initAdminOrders() {
 
       if (data.success && Array.isArray(data.orders)) {
         allAdminOrders = data.orders;
-        updateOrderMetrics(allAdminOrders);
-        renderOrdersTable(allAdminOrders);
+        if (typeof window.filterOrdersTable === 'function') {
+          window.filterOrdersTable();
+        } else {
+          updateOrderMetrics(allAdminOrders);
+          renderOrdersTable(allAdminOrders);
+        }
       } else {
         tableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--hz-gray-sub); padding: 2.5rem;">No orders found.</td></tr>`;
       }
@@ -1850,12 +1894,35 @@ async function initAdminOrders() {
   window.filterOrdersTable = function() {
     const searchInput = document.getElementById('order-search-input');
     const statusFilter = document.getElementById('order-status-filter');
+    const dateFilterEl = document.getElementById('order-date-filter');
+    
     const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
     const status = statusFilter ? statusFilter.value : 'ALL';
+    const dateFilter = dateFilterEl ? dateFilterEl.value : '0';
 
-    const filtered = allAdminOrders.filter(o => {
+    let filtered = allAdminOrders.filter(o => {
       // Status Filter
       if (status !== 'ALL' && o.order_status !== status) return false;
+      
+      // Date Filter
+      if (dateFilter !== 'ALL' && o.created_at) {
+        const orderDate = new Date(o.created_at);
+        const offset = parseInt(dateFilter);
+        
+        const now = new Date();
+        let cycleStart = new Date(now);
+        if (now.getHours() < 12) {
+          cycleStart.setDate(cycleStart.getDate() - 1);
+        }
+        cycleStart.setHours(12, 0, 0, 0);
+        cycleStart.setDate(cycleStart.getDate() - offset);
+        
+        let cycleEnd = new Date(cycleStart);
+        cycleEnd.setDate(cycleEnd.getDate() + 1);
+
+        if (orderDate < cycleStart || orderDate >= cycleEnd) return false;
+      }
+
       // Search Query
       if (query) {
         const orderNum = (o.order_number || '').toLowerCase();
@@ -1870,7 +1937,20 @@ async function initAdminOrders() {
       return true;
     });
 
+    // Custom Sorting: Pending & Processing on top, then newest first
+    filtered.sort((a, b) => {
+      const statusWeight = { pending: 3, processing: 2 };
+      const wA = statusWeight[a.order_status] || 0;
+      const wB = statusWeight[b.order_status] || 0;
+      
+      if (wA !== wB) return wB - wA;
+      return b.id - a.id;
+    });
+
     renderOrdersTable(filtered);
+    
+    // Also update metrics based on filtered results
+    updateOrderMetrics(filtered);
   };
 
   // Instant Refresh Orders Helper
@@ -2313,8 +2393,11 @@ window.openAddressPrintModal = function() {
 window.filterAddressPrintList = function() {
   const searchInput = document.getElementById('label-search-input');
   const statusFilter = document.getElementById('label-status-filter');
+  const dateFilterEl = document.getElementById('label-date-filter');
+  
   const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
   const status = statusFilter ? statusFilter.value : 'ALL';
+  const dateFilter = dateFilterEl ? dateFilterEl.value : '0';
 
   currentFilteredLabelOrders = allAdminOrders.filter(o => {
     // Exclude cancelled orders by default unless explicitly chosen
@@ -2322,6 +2405,25 @@ window.filterAddressPrintList = function() {
       if (o.order_status === 'cancelled') return false;
     } else if (o.order_status !== status) {
       return false;
+    }
+
+    // Date Filter
+    if (dateFilter !== 'ALL' && o.created_at) {
+      const orderDate = new Date(o.created_at);
+      const offset = parseInt(dateFilter);
+      
+      const now = new Date();
+      let cycleStart = new Date(now);
+      if (now.getHours() < 12) {
+        cycleStart.setDate(cycleStart.getDate() - 1);
+      }
+      cycleStart.setHours(12, 0, 0, 0);
+      cycleStart.setDate(cycleStart.getDate() - offset);
+      
+      let cycleEnd = new Date(cycleStart);
+      cycleEnd.setDate(cycleEnd.getDate() + 1);
+
+      if (orderDate < cycleStart || orderDate >= cycleEnd) return false;
     }
 
     if (query) {

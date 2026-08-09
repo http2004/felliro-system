@@ -224,9 +224,13 @@
                 <input type="text" id="order-search-input" class="hz-search-input" placeholder="Search order #, customer..." oninput="filterOrdersTable()">
               </div>
 
+              <select id="order-date-filter" class="hz-filter-select" onchange="filterOrdersTable()">
+                <option value="0">Today</option>
+              </select>
+
               <select id="order-status-filter" class="hz-filter-select" onchange="filterOrdersTable()">
                 <option value="ALL">All Statuses</option>
-                <option value="pending">Pending</option>
+                <option value="pending" selected>Pending</option>
                 <option value="processing">Processing & Packing</option>
                 <option value="ready_for_dispatch">Ready for Dispatch</option>
                 <option value="handed_to_courier">Handed to Courier</option>
@@ -711,6 +715,10 @@
             </svg>
             <input type="text" id="label-search-input" class="hz-search-input" placeholder="Search customer, order #..." oninput="filterAddressPrintList()">
           </div>
+
+          <select id="label-date-filter" class="hz-filter-select" style="background: #FFFFFF;" onchange="filterAddressPrintList()">
+            <option value="0">Today</option>
+          </select>
 
           <select id="label-status-filter" class="hz-filter-select" style="background: #FFFFFF;" onchange="filterAddressPrintList()">
             <option value="ALL">All Statuses</option>
