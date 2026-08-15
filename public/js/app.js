@@ -237,7 +237,7 @@ async function checkoutCartWhatsApp() {
       const trackingUrl = `${window.location.origin}/tracking?order=${orderNum}`;
       const waText = `✨ *FelliRo New WhatsApp Order*\nInvoice #: *${orderNum}*\n\n👤 *Customer:* ${customerName}\n📞 *Phone:* ${customerPhone}\n📍 *Address:* ${customerAddress}\n🗺️ *Region:* ${city}, ${province}\n\n🛍️ *Items Ordered:*\n${itemsListText}\n\n🚚 *Delivery Charge:* ${currentDeliveryFee > 0 ? formatLKR(currentDeliveryFee) : 'FREE'}\n💳 *Grand Total: ${formatLKR(subtotal + currentDeliveryFee)}*\n\n🔗 Live Order Tracking Link: ${trackingUrl}\n\nPlease confirm my order. Thank you!`;
 
-      const waUrl = `https://wa.me/94717716005?text=${encodeURIComponent(waText)}`;
+      const waUrl = `https://wa.me/94729985368?text=${encodeURIComponent(waText)}`;
 
       cart = [];
       saveCart();
@@ -258,7 +258,7 @@ async function checkoutCartWhatsApp() {
 
 // Single Item WhatsApp Order Link
 window.orderDirectWhatsApp = function (productId, name, price, size = 'M', color = 'Default') {
-  const phone = '94717716005'; // Official WhatsApp Number
+  const phone = '94729985368'; // Official WhatsApp Number
   const text = `Hi FelliRo! I would like to order:\n\n👗 *${name}*\n💰 Price: ${formatLKR(price)}\n📏 Size: ${size}\n🎨 Color: ${color}\n\nPlease confirm availability and payment details. Thank you!`;
   const url = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
   window.open(url, '_blank');
@@ -314,10 +314,10 @@ async function openQuickView(productId) {
             </span>
           </div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <button class="btn btn-outline" onclick="addToCart(${p.id}, '${p.name.replace(/'/g, "\\'")}', ${p.price}, '${img}', '${p.size}', '${p.color}'); closeModal('quick-view-modal');">
+            <button class="btn btn-outline" onclick="addToCart(${p.id}, '${p.name.replace(/'/g, "\\'")}', ${p.price}, '${img}', '${p.size}', '${p.color}'); closeModal('quick-view-modal');" ${p.quantity <= 0 ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}>
               <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg> Add To Cart
             </button>
-            <button class="btn btn-whatsapp" onclick="openWhatsAppInquiry('${p.name.replace(/'/g, "\\'")}', ${p.price}, '${p.size}', '${p.color}')">
+            <button class="btn btn-whatsapp" onclick="openWhatsAppInquiry('${p.name.replace(/'/g, "\\'")}', ${p.price}, '${p.size}', '${p.color}')" ${p.quantity <= 0 ? 'disabled style="opacity: 0.5; cursor: not-allowed; background-color: #64748b;"' : ''}>
               <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg> Buy WhatsApp
             </button>
           </div>
@@ -473,7 +473,7 @@ async function initProductsPage() {
 // Render HTML Product Card
 function renderProductCard(p) {
   const image = p.primary_image || 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=800&auto=format&fit=crop&q=80';
-  const badge = p.is_trending ? '<span class="badge-tag">Trending</span>' : p.quantity <= p.min_stock_alert ? '<span class="badge-tag hot">Low Stock</span>' : '';
+  const badge = p.quantity <= 0 ? '<span class="badge-tag" style="background: #ef4444; color: white;">Out of Stock</span>' : (p.is_trending ? '<span class="badge-tag">Trending</span>' : (p.quantity <= p.min_stock_alert ? '<span class="badge-tag hot">Low Stock</span>' : ''));
 
   return `
     <div class="product-card reveal">
@@ -490,7 +490,7 @@ function renderProductCard(p) {
         </div>
         <div class="product-price">${formatLKR(p.price)}</div>
         <div class="product-actions" style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
-          <button class="btn btn-outline btn-sm" onclick="addToCart(${p.id}, '${p.name.replace(/'/g, "\\'")}', ${p.price}, '${image}', '${p.size}', '${p.color}')">
+          <button class="btn btn-outline btn-sm" onclick="addToCart(${p.id}, '${p.name.replace(/'/g, "\\'")}', ${p.price}, '${image}', '${p.size}', '${p.color}')" ${p.quantity <= 0 ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}>
             <svg style="width: 14px; height: 14px; vertical-align: middle; margin-right: 2px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg> Add
           </button>
           <button class="btn btn-primary btn-sm" onclick="openQuickView(${p.id})">

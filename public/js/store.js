@@ -280,7 +280,7 @@ ${itemsFormatted}
 
 💬 _Hi Shasha, I would like to place this order. Please share the bank payment details to confirm!_ 💕`;
 
-  const waUrl = `https://wa.me/94717716005?text=${encodeURIComponent(waText)}`;
+  const waUrl = `https://wa.me/94729985368?text=${encodeURIComponent(waText)}`;
   
   cart = [];
   saveCart();
@@ -338,6 +338,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function initRandomBackgroundAnimation() {
   const container = document.createElement('div');
+  container.className = 'bg-animation-container';
   container.style.position = 'fixed';
   container.style.top = '0';
   container.style.left = '0';
