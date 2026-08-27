@@ -1675,6 +1675,24 @@ async function initAdminProducts() {
       const variants = getVariantsData();
       formData.append('variants', JSON.stringify(variants));
 
+      // Append variant images
+      const tbody = document.getElementById('variants-table-body');
+      if (tbody) {
+        const rows = tbody.querySelectorAll('tr');
+        let varIdx = 0;
+        rows.forEach(tr => {
+          const size = tr.querySelector('.var-size').value.trim();
+          const color = tr.querySelector('.var-color').value.trim();
+          if (size || color) {
+            const imgInput = tr.querySelector('.var-image');
+            if (imgInput && imgInput.files && imgInput.files.length > 0) {
+              formData.append(`variant_image_${varIdx}`, imgInput.files[0]);
+            }
+            varIdx++;
+          }
+        });
+      }
+
       formData.append('min_stock_alert', document.getElementById('product-min-stock').value);
       formData.append('is_trending', document.getElementById('product-trending').checked);
       formData.append('image_url', document.getElementById('product-image-url').value);
@@ -2011,6 +2029,8 @@ async function initAdminOrders() {
   }
 }
 
+window.editOrderItems = [];
+
 async function openEditOrderModal(orderId) {
   try {
     const res = await fetch(`/api/admin/orders/${orderId}/invoice`, { headers: authHeaders() });
@@ -2028,6 +2048,18 @@ async function openEditOrderModal(orderId) {
       document.getElementById('edit-tracking-number').value = o.tracking_number || '';
       document.getElementById('edit-order-status').value = o.order_status || 'pending';
       document.getElementById('edit-delivery-notes').value = o.delivery_notes || '';
+      
+      // Load existing items
+      window.editOrderItems = (o.items || []).map(item => ({
+        product_id: item.product_id,
+        name: item.product_name || `Product #${item.product_id}`,
+        size: item.size || '-',
+        color: item.color || '-',
+        price: parseFloat(item.price),
+        quantity: parseInt(item.quantity)
+      }));
+      renderEditOrderItems();
+      
       openModal('edit-order-modal');
     } else {
       showToast('Failed to load order details', 'error');
@@ -2037,6 +2069,188 @@ async function openEditOrderModal(orderId) {
     showToast('Error loading order details', 'error');
   }
 }
+
+function renderEditOrderItems() {
+  const tbody = document.getElementById('edit-order-items-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = window.editOrderItems.map((item, index) => `
+    <tr>
+      <td style="padding: 8px; font-size: 0.85rem;">${item.name}</td>
+      <td style="padding: 8px; font-size: 0.85rem;">${item.size} / ${item.color}</td>
+      <td style="padding: 8px; font-size: 0.85rem;">Rs. ${item.price.toLocaleString()}</td>
+      <td style="padding: 8px;">
+        <input type="number" min="1" value="${item.quantity}" class="hz-form-input" style="padding: 4px; font-size: 0.8rem;" onchange="updateEditOrderItemQty(${index}, this.value)">
+      </td>
+      <td style="padding: 8px; text-align: center;">
+        <button type="button" onclick="removeEditOrderItem(${index})" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 1.2rem;">&times;</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+window.updateEditOrderItemQty = function(index, newQty) {
+  const qty = parseInt(newQty);
+  if (qty > 0 && window.editOrderItems[index]) {
+    window.editOrderItems[index].quantity = qty;
+  }
+};
+
+window.removeEditOrderItem = function(index) {
+  window.editOrderItems.splice(index, 1);
+  renderEditOrderItems();
+};
+
+window.openEditOrderProductSelector = function() {
+  document.getElementById('edit-order-product-search').value = '';
+  document.getElementById('edit-order-product-results').innerHTML = '<div style="text-align:center; padding:1rem;">Loading products...</div>';
+  document.getElementById('edit-order-product-search-container').style.display = 'block';
+  document.getElementById('edit-order-variant-selector').style.display = 'none';
+  openModal('edit-order-product-modal');
+  handleEditOrderProductSearch();
+};
+
+let editOrderSearchTimeout;
+window.handleEditOrderProductSearch = function() {
+  clearTimeout(editOrderSearchTimeout);
+  editOrderSearchTimeout = setTimeout(async () => {
+    const q = document.getElementById('edit-order-product-search').value.trim();
+    try {
+      const res = await fetch(`/api/admin/products?search=${encodeURIComponent(q)}&status=active`, { headers: authHeaders() });
+      const data = await res.json();
+      if (data.success) {
+        const container = document.getElementById('edit-order-product-results');
+        if (data.products.length === 0) {
+          container.innerHTML = '<div style="text-align:center; padding:1rem; color:#64748b;">No products found.</div>';
+          return;
+        }
+        container.innerHTML = data.products.map(p => {
+          const imgUrl = p.primary_image || '/images/placeholder.svg';
+          return `
+          <div style="border: 1px solid var(--hz-border); padding: 0.8rem; border-radius: 8px; display: flex; align-items: center; gap: 1rem; cursor: pointer; transition: 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--hz-border)'" onclick="openEditOrderVariantSelector(${p.id})">
+            <img src="${imgUrl}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px;" onerror="this.src='/images/placeholder.svg'">
+            <div style="flex-grow: 1;">
+              <div style="font-weight: 700; font-size: 0.95rem; color: var(--hz-navy);">${p.name}</div>
+              <div style="font-size: 0.8rem; color: #64748b;">Rs. ${parseFloat(p.price).toLocaleString()} | Stock: ${p.quantity}</div>
+            </div>
+            <div style="color: var(--primary);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+            </div>
+          </div>
+        `}).join('');
+      }
+    } catch (e) {
+      console.error(e);
+      document.getElementById('edit-order-product-results').innerHTML = '<div style="color:red; text-align:center;">Error loading products</div>';
+    }
+  }, 300);
+};
+
+window.currentEditOrderProduct = null;
+window.currentEditOrderSelectedSize = null;
+window.currentEditOrderSelectedColor = null;
+
+window.openEditOrderVariantSelector = async function(id) {
+  try {
+    document.getElementById('edit-order-product-search-container').style.display = 'none';
+    const variantContainer = document.getElementById('edit-order-variant-selector');
+    variantContainer.style.display = 'block';
+    variantContainer.innerHTML = '<div style="text-align:center; padding:2rem;">Loading details...</div>';
+    
+    const res = await fetch(`/api/products/${id}`);
+    const data = await res.json();
+    if (data.success && data.product) {
+      window.currentEditOrderProduct = data.product;
+      window.currentEditOrderSelectedSize = null;
+      window.currentEditOrderSelectedColor = null;
+      
+      renderEditOrderVariantSelector();
+    }
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+window.renderEditOrderVariantSelector = function() {
+  const p = window.currentEditOrderProduct;
+  if (!p) return;
+  
+  const variants = p.variants || [];
+  const uniqueSizes = [...new Set(variants.map(v => v.size).filter(s => s && s !== '-'))];
+  const uniqueColors = [...new Set(variants.map(v => v.color).filter(c => c && c !== '-'))];
+  
+  let sizeHtml = '';
+  if (uniqueSizes.length > 0) {
+    if (!window.currentEditOrderSelectedSize) window.currentEditOrderSelectedSize = uniqueSizes[0];
+    sizeHtml = `
+      <div style="margin-top:1rem;">
+        <div style="font-size: 0.8rem; font-weight: 700; margin-bottom: 0.5rem; color: #64748b; text-transform: uppercase;">Select Size</div>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          ${uniqueSizes.map(s => {
+            const isActive = window.currentEditOrderSelectedSize === s;
+            return `<button type="button" class="hz-btn-pill" style="border: 2px solid ${isActive ? 'var(--primary)' : 'var(--hz-border)'}; background: ${isActive ? 'var(--primary)' : '#fff'}; color: ${isActive ? '#fff' : 'var(--hz-navy)'}; padding: 6px 16px; font-weight: 600;" onclick="window.currentEditOrderSelectedSize='${s}'; renderEditOrderVariantSelector()">${s}</button>`;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  } else {
+    window.currentEditOrderSelectedSize = '-';
+  }
+  
+  let colorHtml = '';
+  if (uniqueColors.length > 0) {
+    if (!window.currentEditOrderSelectedColor) window.currentEditOrderSelectedColor = uniqueColors[0];
+    colorHtml = `
+      <div style="margin-top:1rem;">
+        <div style="font-size: 0.8rem; font-weight: 700; margin-bottom: 0.5rem; color: #64748b; text-transform: uppercase;">Select Color</div>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          ${uniqueColors.map(c => {
+            const isActive = window.currentEditOrderSelectedColor === c;
+            return `<button type="button" class="hz-btn-pill" style="border: 2px solid ${isActive ? 'var(--primary)' : 'var(--hz-border)'}; background: ${isActive ? 'var(--primary)' : '#fff'}; color: ${isActive ? '#fff' : 'var(--hz-navy)'}; padding: 6px 16px; font-weight: 600;" onclick="window.currentEditOrderSelectedColor='${c}'; renderEditOrderVariantSelector()">${c}</button>`;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  } else {
+    window.currentEditOrderSelectedColor = '-';
+  }
+  
+  const imgUrl = p.images && p.images.length > 0 ? p.images[0].image_url : '/images/placeholder.svg';
+  
+  document.getElementById('edit-order-variant-selector').innerHTML = `
+    <div style="display: flex; align-items: center; gap: 1rem; border-bottom: 1px solid var(--hz-border); padding-bottom: 1rem; margin-bottom: 1rem;">
+      <button type="button" onclick="document.getElementById('edit-order-variant-selector').style.display='none'; document.getElementById('edit-order-product-search-container').style.display='block';" style="background:none; border:none; color:var(--primary); cursor:pointer; font-weight:600;">&larr; Back</button>
+      <div style="flex-grow:1; font-weight: 800; font-size: 1.1rem; color: var(--hz-navy);">${p.name}</div>
+    </div>
+    <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+      <img src="${imgUrl}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid var(--hz-border);" onerror="this.src='/images/placeholder.svg'">
+      <div>
+        <div style="font-size: 1.2rem; font-weight: 800; color: var(--hz-navy);">Rs. ${parseFloat(p.price).toLocaleString()}</div>
+        <div style="font-size: 0.85rem; color: #64748b; margin-top: 4px;">Total Stock: ${p.quantity}</div>
+      </div>
+    </div>
+    ${sizeHtml}
+    ${colorHtml}
+    <div style="margin-top: 2rem;">
+      <button type="button" class="hz-btn-pill hz-btn-primary" style="width: 100%; padding: 12px; font-size: 1rem; font-weight: 700;" onclick="confirmAddEditOrderProduct()">Confirm & Add Item</button>
+    </div>
+  `;
+};
+
+window.confirmAddEditOrderProduct = function() {
+  if (!window.currentEditOrderProduct) return;
+  const p = window.currentEditOrderProduct;
+  
+  window.editOrderItems.push({
+    product_id: p.id,
+    name: p.name,
+    price: parseFloat(p.price),
+    size: window.currentEditOrderSelectedSize || '-',
+    color: window.currentEditOrderSelectedColor || '-',
+    quantity: 1
+  });
+  renderEditOrderItems();
+  closeModal('edit-order-product-modal');
+};
 
 async function handleEditOrderSubmit(event) {
   event.preventDefault();
@@ -2053,7 +2267,8 @@ async function handleEditOrderSubmit(event) {
     delivery_fee: parseFloat(document.getElementById('edit-delivery-fee').value) || 0,
     tracking_number: document.getElementById('edit-tracking-number').value,
     order_status: document.getElementById('edit-order-status').value,
-    delivery_notes: document.getElementById('edit-delivery-notes').value
+    delivery_notes: document.getElementById('edit-delivery-notes').value,
+    items: window.editOrderItems
   };
 
   try {
@@ -2983,7 +3198,9 @@ window.initAdminReports = initAdminReports;
 // ==========================================
 let variantCounter = 0;
 
-function addVariantRow(size = '', color = '', qty = 0) {
+function addVariantRow(size = '', color = '', qty = 0, imageUrl = '') {
+  if (imageUrl === null || imageUrl === 'null') imageUrl = '';
+  
   const tbody = document.getElementById('variants-table-body');
   if (!tbody) return;
   const tr = document.createElement('tr');
@@ -2991,6 +3208,11 @@ function addVariantRow(size = '', color = '', qty = 0) {
     <td><input type="text" class="hz-variant-input var-size" value="${size}" placeholder="e.g. M"></td>
     <td><input type="text" class="hz-variant-input var-color" value="${color}" placeholder="e.g. Red"></td>
     <td><input type="number" class="hz-variant-input var-qty" value="${qty}" min="0"></td>
+    <td>
+      ${imageUrl ? `<img src="${imageUrl}" style="width:24px;height:24px;object-fit:cover;border-radius:4px;margin-bottom:4px;display:block;">` : ''}
+      <input type="file" class="var-image" accept="image/*" style="font-size:0.75rem; width: 100%;">
+      <input type="hidden" class="var-image-url" value="${imageUrl}">
+    </td>
     <td style="text-align: center;"><button type="button" class="hz-variant-del-btn" title="Remove variant" onclick="this.closest('tr').remove()"><svg style="width: 15px; height: 15px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></td>
   `;
   tbody.appendChild(tr);
@@ -3005,8 +3227,9 @@ function getVariantsData() {
     const size = tr.querySelector('.var-size').value.trim();
     const color = tr.querySelector('.var-color').value.trim();
     const qty = parseInt(tr.querySelector('.var-qty').value) || 0;
+    const imgUrl = tr.querySelector('.var-image-url') ? tr.querySelector('.var-image-url').value : '';
     if (size || color) {
-      variants.push({ size, color, quantity: qty });
+      variants.push({ size, color, quantity: qty, image_url: imgUrl });
     }
   });
   return variants;
@@ -3017,7 +3240,7 @@ function renderVariants(variants) {
   if (!tbody) return;
   tbody.innerHTML = '';
   if (variants && variants.length > 0) {
-    variants.forEach(v => addVariantRow(v.size, v.color, v.quantity));
+    variants.forEach(v => addVariantRow(v.size, v.color, v.quantity, v.image_url));
   } else {
     addVariantRow();
   }

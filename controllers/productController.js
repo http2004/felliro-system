@@ -117,14 +117,29 @@ exports.getProductById = async (req, res) => {
 // Admin List all products (excluding archived ones by default)
 exports.getAdminProducts = async (req, res) => {
   try {
-    const [products] = await db.query(`
+    const { search, status } = req.query;
+    let sql = `
       SELECT p.*, c.name AS category_name, pi.image_url AS primary_image
       FROM products p
       LEFT JOIN categories c ON p.category_id = c.id
       LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_primary = TRUE
       WHERE p.status != 'archived'
-      ORDER BY p.id DESC
-    `);
+    `;
+    const params = [];
+    
+    if (status) {
+      sql = sql.replace("p.status != 'archived'", "p.status = ?");
+      params.push(status);
+    }
+    
+    if (search) {
+      sql += ` AND (p.name LIKE ? OR p.description LIKE ?)`;
+      params.push(`%${search}%`, `%${search}%`);
+    }
+    
+    sql += ` ORDER BY p.id DESC`;
+    
+    const [products] = await db.query(sql, params);
     
     if (products.length > 0) {
       const productIds = products.map(p => p.id);
@@ -177,23 +192,43 @@ exports.createProduct = async (req, res) => {
     const productId = result.insertId;
 
     if (parsedVariants.length > 0) {
-      for (const v of parsedVariants) {
+      for (let i = 0; i < parsedVariants.length; i++) {
+        const v = parsedVariants[i];
+        let vImageUrl = null;
+        
+        const variantFile = req.files && req.files.find(f => f.fieldname === `variant_image_${i}`);
+        if (variantFile) {
+          vImageUrl = `/uploads/${variantFile.filename}`;
+        } else if (v.image_url && v.image_url !== 'null' && v.image_url.trim() !== '') {
+          vImageUrl = v.image_url;
+        }
+
         await db.query(`
-          INSERT INTO product_variants (product_id, size, color, quantity)
-          VALUES (?, ?, ?, ?)
-        `, [productId, v.size || '', v.color || '', parseInt(v.quantity) || 0]);
+          INSERT INTO product_variants (product_id, size, color, quantity, image_url)
+          VALUES (?, ?, ?, ?, ?)
+        `, [productId, v.size || '', v.color || '', parseInt(v.quantity) || 0, vImageUrl]);
       }
     }
 
-    if (req.files && req.files.length > 0) {
-      for (let i = 0; i < req.files.length; i++) {
-        const filePath = `/uploads/${req.files[i].filename}`;
-        const isPrimary = (i === 0);
-        await db.query(`INSERT INTO product_images (product_id, image_url, is_primary) VALUES (?, ?, ?)`, [productId, filePath, isPrimary]);
+    let hasPrimary = false;
+    if (req.files) {
+      const mainPhotos = req.files.filter(f => f.fieldname === 'photos');
+      if (mainPhotos.length > 0) {
+        hasPrimary = true;
+        for (let i = 0; i < mainPhotos.length; i++) {
+          const filePath = `/uploads/${mainPhotos[i].filename}`;
+          const isPrimary = (i === 0);
+          await db.query(`INSERT INTO product_images (product_id, image_url, is_primary) VALUES (?, ?, ?)`, [productId, filePath, isPrimary]);
+        }
       }
-    } else if (image_url) {
+    }
+    
+    if (!hasPrimary && image_url) {
       await db.query(`INSERT INTO product_images (product_id, image_url, is_primary) VALUES (?, ?, TRUE)`, [productId, image_url]);
-    } else {
+      hasPrimary = true;
+    } 
+    
+    if (!hasPrimary) {
       await db.query(`INSERT INTO product_images (product_id, image_url, is_primary) VALUES (?, ?, TRUE)`, [productId, 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=800&auto=format&fit=crop&q=80']);
     }
 
@@ -238,22 +273,36 @@ exports.updateProduct = async (req, res) => {
     // Update variants
     await db.query(`DELETE FROM product_variants WHERE product_id = ?`, [productId]);
     if (parsedVariants.length > 0) {
-      for (const v of parsedVariants) {
+      for (let i = 0; i < parsedVariants.length; i++) {
+        const v = parsedVariants[i];
+        let vImageUrl = null;
+        
+        const variantFile = req.files && req.files.find(f => f.fieldname === `variant_image_${i}`);
+        if (variantFile) {
+          vImageUrl = `/uploads/${variantFile.filename}`;
+        } else if (v.image_url && v.image_url !== 'null' && v.image_url.trim() !== '') {
+          vImageUrl = v.image_url;
+        }
+
         await db.query(`
-          INSERT INTO product_variants (product_id, size, color, quantity)
-          VALUES (?, ?, ?, ?)
-        `, [productId, v.size || '', v.color || '', parseInt(v.quantity) || 0]);
+          INSERT INTO product_variants (product_id, size, color, quantity, image_url)
+          VALUES (?, ?, ?, ?, ?)
+        `, [productId, v.size || '', v.color || '', parseInt(v.quantity) || 0, vImageUrl]);
       }
     }
 
-    if (req.files && req.files.length > 0) {
-      await db.query(`DELETE FROM product_images WHERE product_id = ?`, [productId]);
-      for (let i = 0; i < req.files.length; i++) {
-        const filePath = `/uploads/${req.files[i].filename}`;
-        const isPrimary = (i === 0);
-        await db.query(`INSERT INTO product_images (product_id, image_url, is_primary) VALUES (?, ?, ?)`, [productId, filePath, isPrimary]);
+    if (req.files) {
+      const mainPhotos = req.files.filter(f => f.fieldname === 'photos');
+      if (mainPhotos.length > 0) {
+        await db.query(`DELETE FROM product_images WHERE product_id = ?`, [productId]);
+        for (let i = 0; i < mainPhotos.length; i++) {
+          const filePath = `/uploads/${mainPhotos[i].filename}`;
+          const isPrimary = (i === 0);
+          await db.query(`INSERT INTO product_images (product_id, image_url, is_primary) VALUES (?, ?, ?)`, [productId, filePath, isPrimary]);
+        }
       }
     } else if (image_url) {
+      // image_url from client means keep old or replace with single remote
       await db.query(`DELETE FROM product_images WHERE product_id = ?`, [productId]);
       await db.query(`INSERT INTO product_images (product_id, image_url, is_primary) VALUES (?, ?, TRUE)`, [productId, image_url]);
     }

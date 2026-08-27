@@ -301,61 +301,164 @@ exports.getAdminOrders = async (req, res) => {
 
 // Admin Update Full Order Details
 exports.updateOrder = async (req, res) => {
+  const connection = await db.getConnection();
   try {
-    const orderId = req.params.id;
-    const { customer_name, customer_phone, customer_email, customer_address, city, province, delivery_fee, tracking_number, delivery_notes, order_status } = req.body;
+    await connection.beginTransaction();
 
-    const [existing] = await db.query(`SELECT * FROM orders WHERE id = ?`, [orderId]);
+    const orderId = req.params.id;
+    const { customer_name, customer_phone, customer_email, customer_address, city, province, delivery_fee, tracking_number, delivery_notes, order_status, items } = req.body;
+
+    const [existing] = await connection.query(`SELECT * FROM orders WHERE id = ?`, [orderId]);
     if (existing.length === 0) {
+      await connection.rollback();
+      connection.release();
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
 
     const currentOrder = existing[0];
-
-    // Calculate new total_amount if delivery_fee was updated
-    const [items] = await db.query(`SELECT SUM(total) AS items_total FROM order_items WHERE order_id = ?`, [orderId]);
-    const itemsTotal = parseFloat(items[0].items_total || 0);
     const newDeliveryFee = delivery_fee !== undefined ? parseFloat(delivery_fee) || 0 : parseFloat(currentOrder.delivery_fee || 0);
-    const newTotalAmount = itemsTotal + newDeliveryFee;
+    
+    let itemsSubtotal = 0;
 
-    await db.query(`
+    // Handle Item Edits if items array is provided
+    if (items && Array.isArray(items)) {
+      // Fetch existing items to restore stock
+      const [oldItems] = await connection.query(`SELECT * FROM order_items WHERE order_id = ?`, [orderId]);
+      
+      for (const oldItem of oldItems) {
+        // Restore main product stock
+        await connection.query(`UPDATE products SET quantity = quantity + ?, total_sold = GREATEST(0, total_sold - ?) WHERE id = ?`, [oldItem.quantity, oldItem.quantity, oldItem.product_id]);
+        
+        // Find variant to restore
+        const [variants] = await connection.query(`SELECT id FROM product_variants WHERE product_id = ? AND (size = ? OR size = ?) AND (color = ? OR color = ?)`, [oldItem.product_id, oldItem.size, '-', oldItem.color, '-']);
+        if (variants.length > 0) {
+          // Just restore on the first match if multiple
+          await connection.query(`UPDATE product_variants SET quantity = quantity + ? WHERE id = ?`, [oldItem.quantity, variants[0].id]);
+        }
+        
+        // Inventory Log
+        await connection.query(`
+          INSERT INTO inventory_logs (product_id, previous_quantity, new_quantity, change_type, note, created_by)
+          VALUES (?, (SELECT quantity - ? FROM products WHERE id = ?), (SELECT quantity FROM products WHERE id = ?), 'correction', ?, ?)
+        `, [oldItem.product_id, oldItem.quantity, oldItem.product_id, oldItem.product_id, `Restored from Order ${currentOrder.order_number} Edit`, req.user ? req.user.id : null]);
+      }
+
+      // Delete old items
+      await connection.query(`DELETE FROM order_items WHERE order_id = ?`, [orderId]);
+
+      // Deduct new items
+      const validatedItems = [];
+      for (const item of items) {
+        const [prod] = await connection.query(`SELECT id, name, price, quantity FROM products WHERE id = ?`, [item.product_id]);
+        if (prod.length === 0) {
+          await connection.rollback();
+          connection.release();
+          return res.status(400).json({ success: false, message: `Product ID ${item.product_id} not found` });
+        }
+
+        const product = prod[0];
+        const qty = parseInt(item.quantity || 1);
+        const size = item.size || '-';
+        const color = item.color || '-';
+
+        if (product.quantity < qty) {
+          await connection.rollback();
+          connection.release();
+          return res.status(400).json({ success: false, message: `Insufficient stock for '${product.name}'. Available: ${product.quantity}` });
+        }
+
+        const [allVariants] = await connection.query(`SELECT id, size, color, quantity FROM product_variants WHERE product_id = ?`, [product.id]);
+
+        let targetVariant = null;
+        if (allVariants.length > 0) {
+          if (size !== '-' && color !== '-') {
+            targetVariant = allVariants.find(v => (v.size || '').trim().toLowerCase() === size.trim().toLowerCase() && (v.color || '').trim().toLowerCase() === color.trim().toLowerCase());
+          }
+          if (!targetVariant && size !== '-' && color !== '-') {
+            targetVariant = allVariants.find(v => (v.size || '').trim().toLowerCase() === size.trim().toLowerCase() && ((v.color || '').trim().toLowerCase().includes(color.trim().toLowerCase()) || color.trim().toLowerCase().includes((v.color || '').trim().toLowerCase())));
+          }
+          if (!targetVariant && size !== '-') {
+            targetVariant = allVariants.find(v => (v.size || '').trim().toLowerCase() === size.trim().toLowerCase());
+          }
+          if (!targetVariant && color !== '-') {
+            targetVariant = allVariants.find(v => (v.color || '').trim().toLowerCase() === color.trim().toLowerCase());
+          }
+          if (!targetVariant) {
+            targetVariant = allVariants.find(v => v.quantity >= qty) || allVariants[0];
+          }
+
+          if (targetVariant && targetVariant.quantity < qty) {
+            await connection.rollback();
+            connection.release();
+            return res.status(400).json({ success: false, message: `Insufficient stock for '${product.name}' (${targetVariant.color ? targetVariant.color + ' ' : ''}${targetVariant.size ? targetVariant.size : ''}). Available: ${targetVariant.quantity}` });
+          }
+        }
+
+        const finalSize = targetVariant && targetVariant.size ? targetVariant.size : size;
+        const finalColor = targetVariant && targetVariant.color ? targetVariant.color : color;
+        const itemTotal = product.price * qty;
+        itemsSubtotal += itemTotal;
+
+        validatedItems.push({
+          product_id: product.id,
+          quantity: qty,
+          price: product.price,
+          total: itemTotal,
+          size: finalSize,
+          color: finalColor
+        });
+
+        // Deduct main stock
+        await connection.query(`UPDATE products SET quantity = GREATEST(0, quantity - ?), total_sold = total_sold + ? WHERE id = ?`, [qty, qty, product.id]);
+
+        // Deduct variant stock
+        if (targetVariant && targetVariant.id) {
+          await connection.query(`UPDATE product_variants SET quantity = GREATEST(0, quantity - ?) WHERE id = ?`, [qty, targetVariant.id]);
+        }
+
+        // Inventory Log
+        await connection.query(`
+          INSERT INTO inventory_logs (product_id, previous_quantity, new_quantity, change_type, note, created_by)
+          VALUES (?, (SELECT quantity + ? FROM products WHERE id = ?), (SELECT quantity FROM products WHERE id = ?), 'sale', ?, ?)
+        `, [product.id, qty, product.id, product.id, `Sale on Order Edit ${currentOrder.order_number}`, req.user ? req.user.id : null]);
+      }
+
+      // Insert new items
+      for (const item of validatedItems) {
+        await connection.query(`
+          INSERT INTO order_items (order_id, product_id, quantity, price, total, size, color)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `, [orderId, item.product_id, item.quantity, item.price, item.total, item.size, item.color]);
+      }
+    } else {
+      // No items array passed, keep existing items sum
+      const [oldItemsRes] = await connection.query(`SELECT SUM(total) AS items_total FROM order_items WHERE order_id = ?`, [orderId]);
+      itemsSubtotal = parseFloat(oldItemsRes[0].items_total || 0);
+    }
+
+    const newTotalAmount = itemsSubtotal + newDeliveryFee;
+
+    await connection.query(`
       UPDATE orders
-      SET customer_name = ?,
-          customer_phone = ?,
-          customer_email = ?,
-          customer_address = ?,
-          city = ?,
-          province = ?,
-          delivery_fee = ?,
-          total_amount = ?,
-          net_amount = ?,
-          tracking_number = ?,
-          delivery_notes = ?,
-          order_status = ?
+      SET customer_name = ?, customer_phone = ?, customer_email = ?, customer_address = ?, city = ?, province = ?, delivery_fee = ?, total_amount = ?, net_amount = ?, tracking_number = ?, delivery_notes = ?, order_status = ?
       WHERE id = ?
     `, [
-      customer_name || currentOrder.customer_name,
-      customer_phone || currentOrder.customer_phone,
-      customer_email || currentOrder.customer_email || '',
-      customer_address || currentOrder.customer_address || '',
-      city || currentOrder.city || 'Colombo',
-      province || currentOrder.province || 'Western',
-      newDeliveryFee,
-      newTotalAmount,
-      newTotalAmount,
-      tracking_number || currentOrder.tracking_number || null,
-      delivery_notes || currentOrder.delivery_notes || '',
-      order_status || currentOrder.order_status,
-      orderId
+      customer_name || currentOrder.customer_name, customer_phone || currentOrder.customer_phone, customer_email || currentOrder.customer_email || '', customer_address || currentOrder.customer_address || '', city || currentOrder.city || 'Colombo', province || currentOrder.province || 'Western', newDeliveryFee, newTotalAmount, newTotalAmount, tracking_number || currentOrder.tracking_number || null, delivery_notes || currentOrder.delivery_notes || '', order_status || currentOrder.order_status, orderId
     ]);
 
-    await db.query(`
+    await connection.query(`
       INSERT INTO order_status_history (order_id, status, note, updated_by)
       VALUES (?, ?, ?, ?)
     `, [orderId, order_status || currentOrder.order_status, 'Order details updated by admin/cashier', req.user ? req.user.id : 1]);
 
+    await connection.commit();
+    connection.release();
     res.json({ success: true, message: 'Order details updated successfully!' });
   } catch (error) {
+    if (connection) {
+      await connection.rollback();
+      connection.release();
+    }
     console.error('Error updating order:', error);
     res.status(500).json({ success: false, message: 'Failed to update order details' });
   }

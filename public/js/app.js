@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function fetchPublicRegions() {
   try {
-    const res = await fetch('/api/regions');
+    const res = await fetch('/api/regions?t=' + new Date().getTime());
     const data = await res.json();
     if (data.success) {
       publicRegions = data.regions;
@@ -158,7 +158,7 @@ function renderCartDrawer() {
     subtotal += itemTotal;
     return `
       <div style="display: flex; gap: 12px; padding: 1rem 0; border-bottom: 1px solid #E2E8F0; align-items: center;">
-        <img src="${item.image}" alt="${item.name}" style="width: 54px; height: 54px; object-fit: cover; border-radius: 10px;">
+        <img src="${item.image}" alt="${item.name}" style="width: 54px; height: 54px; object-fit: cover; border-radius: 10px;" onerror="this.onerror=null; this.src='/images/placeholder.svg';">
         <div style="flex-grow: 1;">
           <h4 style="font-size: 0.95rem; font-weight: 700; line-height: 1.2;">${item.name}</h4>
           <div style="font-size: 0.78rem; color: #64748b;">Size: ${item.size} | Color: ${item.color}</div>
@@ -291,9 +291,37 @@ async function openQuickView(productId) {
       const p = data.product;
       const img = p.images && p.images.length > 0 ? p.images[0].image_url : 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=800&auto=format&fit=crop&q=80';
 
+      let uniqueColors = [];
+      let uniqueSizes = [];
+      let variants = p.variants || [];
+      
+      variants.forEach(v => {
+        if (v.color && !uniqueColors.includes(v.color)) uniqueColors.push(v.color);
+        if (v.size && !uniqueSizes.includes(v.size)) uniqueSizes.push(v.size);
+      });
+      
+      if (uniqueColors.length === 0) uniqueColors.push(p.color || 'Default');
+      if (uniqueSizes.length === 0) uniqueSizes.push(p.size || 'M');
+
+      window.currentProductVariants = variants;
+      window.currentDefaultImg = img;
+      window.currentSelectedSize = uniqueSizes[0];
+      window.currentSelectedColor = uniqueColors[0];
+      window.currentProductId = p.id;
+      window.currentProductName = p.name.replace(/'/g, "\\'");
+      window.currentProductPrice = p.price;
+
+      const colorBtns = uniqueColors.map(c => 
+        `<button class="variant-btn color-btn ${c === window.currentSelectedColor ? 'active' : ''}" onclick="selectVariantColor('${c}')" style="padding: 4px 10px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer; margin-right: 5px; background: ${c === window.currentSelectedColor ? 'var(--primary)' : '#fff'}; color: ${c === window.currentSelectedColor ? '#fff' : '#333'};">${c}</button>`
+      ).join('');
+
+      const sizeBtns = uniqueSizes.map(s => 
+        `<button class="variant-btn size-btn ${s === window.currentSelectedSize ? 'active' : ''}" onclick="selectVariantSize('${s}')" style="padding: 4px 10px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer; margin-right: 5px; background: ${s === window.currentSelectedSize ? 'var(--primary)' : '#fff'}; color: ${s === window.currentSelectedSize ? '#fff' : '#333'};">${s}</button>`
+      ).join('');
+
       modalContent.innerHTML = `
         <div style="border-radius: 16px; overflow: hidden; height: 350px;">
-          <img src="${img}" alt="${p.name}" style="width: 100%; height: 100%; object-fit: cover;">
+          <img id="qv-main-image" src="${img}" alt="${p.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.src='/images/placeholder.svg';">
         </div>
         <div>
           <div style="font-size: 0.8rem; font-weight: 700; color: var(--primary); text-transform: uppercase; margin-bottom: 0.4rem;">
@@ -306,27 +334,78 @@ async function openQuickView(productId) {
           <p style="color: #64748b; font-size: 0.92rem; margin-bottom: 1.2rem; line-height: 1.5;">
             ${p.description || 'Premium Sri Lankan crafted fashion item designed for durability, comfort, and style.'}
           </p>
-          <div style="display: flex; gap: 12px; margin-bottom: 1.5rem;">
-            <span style="background: #F1F5F9; padding: 4px 12px; border-radius: 6px; font-weight: 700; font-size: 0.85rem;">Size: ${p.size || 'M'}</span>
-            <span style="background: #F1F5F9; padding: 4px 12px; border-radius: 6px; font-weight: 700; font-size: 0.85rem;">Color: ${p.color || 'Default'}</span>
-            <span style="background: ${p.quantity > 0 ? '#DCFCE7' : '#FEE2E2'}; color: ${p.quantity > 0 ? '#15803D' : '#B91C1C'}; padding: 4px 12px; border-radius: 6px; font-weight: 700; font-size: 0.85rem;">
-              ${p.quantity > 0 ? 'In Stock (' + p.quantity + ')' : 'Out of Stock'}
-            </span>
+          <div style="margin-bottom: 1rem;">
+            <div style="font-size: 0.85rem; font-weight: 700; margin-bottom: 5px;">Colors:</div>
+            <div id="qv-colors-container">${colorBtns}</div>
           </div>
+          <div style="margin-bottom: 1.5rem;">
+            <div style="font-size: 0.85rem; font-weight: 700; margin-bottom: 5px;">Sizes:</div>
+            <div id="qv-sizes-container">${sizeBtns}</div>
+          </div>
+          
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <button class="btn btn-outline" onclick="addToCart(${p.id}, '${p.name.replace(/'/g, "\\'")}', ${p.price}, '${img}', '${p.size}', '${p.color}'); closeModal('quick-view-modal');" ${p.quantity <= 0 ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}>
+            <button class="btn btn-outline" id="qv-add-cart-btn" onclick="addToCart(window.currentProductId, window.currentProductName, window.currentProductPrice, document.getElementById('qv-main-image').src, window.currentSelectedSize, window.currentSelectedColor); closeModal('quick-view-modal');" ${p.quantity <= 0 ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}>
               <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg> Add To Cart
             </button>
-            <button class="btn btn-whatsapp" onclick="openWhatsAppInquiry('${p.name.replace(/'/g, "\\'")}', ${p.price}, '${p.size}', '${p.color}')" ${p.quantity <= 0 ? 'disabled style="opacity: 0.5; cursor: not-allowed; background-color: #64748b;"' : ''}>
+            <button class="btn btn-whatsapp" id="qv-buy-wa-btn" onclick="openWhatsAppInquiry(window.currentProductName, window.currentProductPrice, window.currentSelectedSize, window.currentSelectedColor)" ${p.quantity <= 0 ? 'disabled style="opacity: 0.5; cursor: not-allowed; background-color: #64748b;"' : ''}>
               <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg> Buy WhatsApp
             </button>
           </div>
         </div>
       `;
+      // Trigger initial image update if the first selected color has a variant image
+      selectVariantColor(window.currentSelectedColor, false);
     }
   } catch (err) {
     console.error('Error opening quick view:', err);
   }
+}
+
+window.selectVariantColor = function(color, updateButtons = true) {
+  window.currentSelectedColor = color;
+  
+  if (updateButtons) {
+    const btns = document.querySelectorAll('.color-btn');
+    btns.forEach(b => {
+      if (b.innerText === color) {
+        b.classList.add('active');
+        b.style.background = 'var(--primary)';
+        b.style.color = '#fff';
+      } else {
+        b.classList.remove('active');
+        b.style.background = '#fff';
+        b.style.color = '#333';
+      }
+    });
+  }
+
+  // Find variant with this color and check if it has an image
+  const variant = window.currentProductVariants.find(v => v.color === color);
+  const mainImage = document.getElementById('qv-main-image');
+  if (mainImage) {
+    if (variant && variant.image_url && variant.image_url !== 'null' && variant.image_url.trim() !== '') {
+      mainImage.src = variant.image_url;
+    } else {
+      mainImage.src = window.currentDefaultImg;
+    }
+  }
+}
+
+window.selectVariantSize = function(size) {
+  window.currentSelectedSize = size;
+  
+  const btns = document.querySelectorAll('.size-btn');
+  btns.forEach(b => {
+    if (b.innerText === size) {
+      b.classList.add('active');
+      b.style.background = 'var(--primary)';
+      b.style.color = '#fff';
+    } else {
+      b.classList.remove('active');
+      b.style.background = '#fff';
+      b.style.color = '#333';
+    }
+  });
 }
 
 // Reset Filters Function
@@ -479,7 +558,7 @@ function renderProductCard(p) {
     <div class="product-card reveal">
       <div class="product-img-holder">
         ${badge}
-        <img src="${image}" alt="${p.name}" loading="lazy">
+        <img src="${image}" alt="${p.name}" loading="lazy" onerror="this.onerror=null; this.src='/images/placeholder.svg';">
       </div>
       <div class="product-info">
         <div class="product-category">${p.category_name || 'Clothing'}</div>

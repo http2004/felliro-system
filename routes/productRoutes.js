@@ -10,8 +10,8 @@ router.get('/products/:id', productController.getProductById);
 
 // Admin APIs
 router.get('/admin/products', authenticateToken, authorizeRoles('admin', 'cashier'), productController.getAdminProducts);
-router.post('/admin/products', authenticateToken, authorizeRoles('admin'), upload.array('photos', 5), productController.createProduct);
-router.put('/admin/products/:id', authenticateToken, authorizeRoles('admin'), upload.array('photos', 5), productController.updateProduct);
+router.post('/admin/products', authenticateToken, authorizeRoles('admin'), upload.any(), productController.createProduct);
+router.put('/admin/products/:id', authenticateToken, authorizeRoles('admin'), upload.any(), productController.updateProduct);
 router.patch('/admin/products/:id/stock', authenticateToken, authorizeRoles('admin', 'cashier'), productController.updateStock);
 router.delete('/admin/products/:id', authenticateToken, authorizeRoles('admin'), productController.deleteProduct);
 

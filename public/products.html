@@ -170,7 +170,7 @@
     <div class="qv-content">
       <button class="qv-close" onclick="closeQuickView()">✕</button>
       <div class="qv-img">
-        <img id="qv-image" src="" alt="">
+        <img id="qv-image" src="" alt="" onerror="this.onerror=null; this.src='/images/placeholder.svg';">
       </div>
       <div class="qv-details">
         <div style="font-size: 12px; text-transform: uppercase; letter-spacing:1px; color: var(--text-muted); margin-bottom: 5px;" id="qv-category">Category</div>
@@ -277,7 +277,7 @@
           <div class="single-product product-card reveal active" style="transition-delay: ${(index % 12) * 50}ms" onclick="openProductQuickView(${p.id})">
             <div class="product-img-wrapper product-img-holder" style="position:relative;">
               ${badge}
-              <img src="${img}" alt="${p.name}">
+              <img src="${img}" alt="${p.name}" onerror="this.onerror=null; this.src='/images/placeholder.svg';">
               <div class="hover-gradient"></div>
             </div>
             <div class="product-details">
@@ -338,7 +338,8 @@
         const colorSelect = document.getElementById('qv-color');
         const selectedSize = sizeSelect.dataset.value || 'M';
         const selectedColor = colorSelect.dataset.value || 'Default';
-        addToCart(p.id, p.name, p.price, img, selectedSize, selectedColor);
+        const currentImg = document.getElementById('qv-image').src;
+        addToCart(p.id, p.name, p.price, currentImg, selectedSize, selectedColor);
         closeQuickView();
       };
       
@@ -382,6 +383,18 @@
         
         sizeSelect.dataset.value = selectedSize;
         colorSelect.dataset.value = selectedColor;
+        
+        // Update main image based on selected color variant
+        const selectedVariant = p.variants.find(v => v.color === selectedColor && v.size === selectedSize) 
+                             || p.variants.find(v => v.color === selectedColor);
+                             
+        const defaultImg = p.primary_image ? p.primary_image : 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=800';
+        
+        if (selectedVariant && selectedVariant.image_url && selectedVariant.image_url !== 'null' && selectedVariant.image_url.trim() !== '') {
+            document.getElementById('qv-image').src = selectedVariant.image_url;
+        } else {
+            document.getElementById('qv-image').src = defaultImg;
+        }
       } else {
         sizeSelect.innerHTML = `<div class="swatch active" onclick="window.selectSwatch(this, 'qv-size', 'M')">Standard</div>`;
         colorSelect.innerHTML = `<div class="swatch active" onclick="window.selectSwatch(this, 'qv-color', 'Default')">Standard</div>`;

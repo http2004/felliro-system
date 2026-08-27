@@ -325,7 +325,7 @@
               <div class="single-product reveal" onclick="window.location.href='/products'">
                 <div class="product-img-wrapper product-img-holder" style="position:relative;">
                   ${badge}
-                  <img src="${img}" alt="${p.name}">
+                  <img src="${img}" alt="${p.name}" onerror="this.onerror=null; this.src='/images/placeholder.svg';">
                   <div class="hover-gradient"></div>
                 </div>
                 <div class="product-details">

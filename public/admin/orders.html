@@ -588,6 +588,30 @@
           </div>
         </div>
 
+        <!-- ORDER ITEMS EDITOR -->
+        <div style="margin-bottom: 1.5rem; background: #fff; padding: 1rem; border-radius: 8px; border: 1px solid var(--hz-border);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
+            <label class="hz-form-label" style="margin:0;">Order Items</label>
+            <button type="button" class="hz-btn-pill" style="font-size: 0.8rem; padding: 4px 12px;" onclick="openEditOrderProductSelector()">+ Add Item</button>
+          </div>
+          <div style="max-height: 200px; overflow-y: auto; border: 1px solid var(--hz-border); border-radius: 6px;">
+            <table class="hz-table" style="margin: 0; min-width: 100%;">
+              <thead>
+                <tr>
+                  <th style="padding: 8px; font-size: 0.75rem;">Product</th>
+                  <th style="padding: 8px; font-size: 0.75rem;">Variant</th>
+                  <th style="padding: 8px; font-size: 0.75rem;">Price</th>
+                  <th style="padding: 8px; font-size: 0.75rem; width: 80px;">Qty</th>
+                  <th style="padding: 8px; font-size: 0.75rem; width: 50px;"></th>
+                </tr>
+              </thead>
+              <tbody id="edit-order-items-tbody">
+                <!-- Items populated here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         <div class="hz-form-group">
           <label class="hz-form-label">Delivery / Special Notes</label>
           <textarea id="edit-delivery-notes" class="hz-form-textarea" rows="2" placeholder="e.g. Call before delivery"></textarea>
@@ -598,6 +622,29 @@
           <button type="submit" class="hz-btn-pill hz-btn-primary" id="edit-order-submit-btn">Save Order Changes</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Product Selector for Edit Order -->
+  <div class="modal-overlay" id="edit-order-product-modal" style="z-index: 10005;">
+    <div class="hz-modal-card" style="max-width: 500px;">
+      <div class="hz-modal-header">
+        <h3 class="hz-modal-title">Select Product</h3>
+        <button type="button" class="hz-modal-close" onclick="closeModal('edit-order-product-modal')">?</button>
+      </div>
+      <div style="padding: 1rem; position: relative;">
+        <div id="edit-order-product-search-container">
+          <input type="text" id="edit-order-product-search" class="hz-form-input" placeholder="Search product by name..." oninput="handleEditOrderProductSearch()" style="margin-bottom: 1rem;">
+          
+          <div id="edit-order-product-results" style="max-height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.5rem;">
+            <!-- Search results -->
+          </div>
+        </div>
+        
+        <div id="edit-order-variant-selector" style="display: none; padding: 0.5rem;">
+          <!-- Variant selector injected here -->
+        </div>
+      </div>
     </div>
   </div>
 
