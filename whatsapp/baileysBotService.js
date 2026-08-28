@@ -992,7 +992,25 @@ async function handleLocalRuleBasedFlow(targetJid, phone, rawText, conv) {
     lowerText.includes('how many days') ||
     lowerText.includes('deliver karanna')
   ) {
-    const delMsg = `🚚 *FelliRo Delivery Information (Fardar Express)* 🚚\n\n🔹 *කොළඹ & ගම්පහ:* රු. 350/=\n🔹 *අනෙකුත් සියලුම දිස්ත්‍රික්ක:* රු. 400/= - 450/=\n⏱️ *කාලය:* Order එක තහවුරු කර දින 2-3ක් ඇතුළත ඔබේ නිවසටම ලැබෙනු ඇත. ✨\n\nඔබට කැමති ඇඳුම් වර්ගයක් තෝරා ගැනීමට අපගේ Categories පෙන්වන්නද? 💕`;
+    // Calculate min and max from DB regions
+    let minCharge = 450;
+    let maxCharge = 450;
+    if (regions && regions.length > 0) {
+      const charges = regions.map(r => parseFloat(r.delivery_charge) || 0).filter(c => c > 0);
+      if (charges.length > 0) {
+        minCharge = Math.min(...charges);
+        maxCharge = Math.max(...charges);
+      }
+    }
+    
+    let priceText = '';
+    if (minCharge === maxCharge) {
+      priceText = `රු. ${minCharge}/=`;
+    } else {
+      priceText = `රු. ${minCharge}/= - ${maxCharge}/=`;
+    }
+
+    const delMsg = `🚚 *FelliRo Delivery Information (Fardar Express)* 🚚\n\n🔹 *දිවයින පුරා ඩිලිවරි ගාස්තුව:* ${priceText}\n⏱️ *කාලය:* Order එක තහවුරු කර දින 2-3ක් ඇතුළත ඔබේ නිවසටම ලැබෙනු ඇත. ✨\n\nඔබට කැමති ඇඳුම් වර්ගයක් තෝරා ගැනීමට අපගේ Categories පෙන්වන්නද? 💕`;
     await sendMessage(targetJid || phone, delMsg);
     stateManager.addMessageToHistory(phone, 'assistant', delMsg);
     return;
