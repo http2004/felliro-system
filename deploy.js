@@ -16,7 +16,8 @@ try {
 
 const cmd = `
   cd /var/www/felliro
-  git pull origin main
+  git fetch origin main
+  git reset --hard origin/main
   pm2 restart felliro --update-env
 `;
 
