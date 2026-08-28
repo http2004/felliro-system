@@ -290,20 +290,20 @@
           <input type="text" id="product-name" class="hz-form-input" placeholder="e.g. Magenta Floral Summer Dress" required>
         </div>
 
-        <!-- Direct Photo Upload Dropzone -->
         <div class="hz-form-group">
           <label class="hz-form-label">Product Photos (Direct Upload)</label>
-          <div class="hz-upload-dropzone" onclick="document.getElementById('product-photos').click()">
-            <svg style="width: 32px; height: 32px; color: var(--hz-brand); margin-bottom: 6px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <div class="hz-upload-dropzone" onclick="document.getElementById('product-photos').click()" style="padding: 1.5rem; text-align: center; border: 2px dashed var(--hz-brand); border-radius: 12px; background: #F8FAFC; cursor: pointer; transition: 0.2s;">
+            <svg style="width: 36px; height: 36px; color: var(--hz-brand); margin-bottom: 8px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
               <polyline points="17 8 12 3 7 8" />
               <line x1="12" x2="12" y1="3" y2="15" />
             </svg>
-            <div style="font-size: 0.9rem; font-weight: 700; color: var(--hz-navy);">Click to upload photos (Single or Multiple)</div>
-            <div style="font-size: 0.78rem; color: var(--hz-gray-sub); margin-top: 2px;">JPG, PNG, WEBP (Max 5MB each)</div>
+            <div style="font-size: 1rem; font-weight: 800; color: var(--hz-navy);">Click to Upload Main Photos</div>
+            <div style="font-size: 0.8rem; color: var(--hz-gray-sub); margin-top: 4px;">JPG, PNG, WEBP (Max 5MB each)</div>
             <input type="file" id="product-photos" multiple accept="image/*" style="display: none;" onchange="handlePhotoSelect(this)">
-            <div id="upload-feedback" style="font-size: 0.8rem; font-weight: 700; color: var(--hz-brand); margin-top: 6px; display: none;"></div>
           </div>
+          <!-- Preview Container -->
+          <div id="product-photo-previews" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px;"></div>
         </div>
 
         <!-- Price & Cost Grid -->
@@ -338,28 +338,28 @@
 
         <!-- Variations Manager (Size, Color, Qty) -->
         <div class="hz-form-group" style="background: #F8FAFC; border: 1px solid var(--hz-border); border-radius: 16px; padding: 1.2rem;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
-            <div>
-              <div style="font-size: 0.85rem; font-weight: 800; color: var(--hz-navy);">Product Variations (Size & Color)</div>
-              <div style="font-size: 0.75rem; color: var(--hz-gray-sub);">Stock is automatically summed from variants.</div>
-            </div>
-            <button type="button" class="hz-btn-pill hz-btn-primary" style="padding: 0.4rem 0.9rem; font-size: 0.78rem;" onclick="addVariantRow()">+ Add Variant</button>
+        <!-- Variations Setup -->
+        <div class="hz-form-group" style="margin-top: 2rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
+            <label class="hz-form-label" style="margin: 0; font-size: 1.05rem; color: var(--hz-brand);">Product Variations</label>
+            <button type="button" class="hz-btn-pill" style="font-size: 0.75rem; padding: 6px 12px; background: #e0e7ff; color: var(--hz-brand); border: none;" onclick="addVariantRow()">+ Add Variant</button>
           </div>
-
-          <table class="hz-variant-table">
-            <thead>
-              <tr>
-                <th style="width: 20%;">Size</th>
-                <th style="width: 25%;">Color</th>
-                <th style="width: 15%;">Quantity</th>
-                <th style="width: 28%;">Photo (Optional)</th>
-                <th style="width: 12%; text-align: center;"></th>
-              </tr>
-            </thead>
-            <tbody id="variants-table-body">
-              <!-- Dynamically populated variant rows -->
-            </tbody>
-          </table>
+          <div style="background: #F8FAFC; border: 1px solid var(--hz-border); border-radius: 12px; padding: 0.5rem; overflow-x: auto;">
+            <table class="hz-table" style="margin: 0; width: 100%; min-width: 600px; border-collapse: separate; border-spacing: 0 8px;">
+              <thead>
+                <tr style="background: transparent;">
+                  <th style="font-size: 0.75rem; color: #64748b; padding-bottom: 0;">Size</th>
+                  <th style="font-size: 0.75rem; color: #64748b; padding-bottom: 0;">Color</th>
+                  <th style="font-size: 0.75rem; color: #64748b; padding-bottom: 0;">Qty</th>
+                  <th style="font-size: 0.75rem; color: #64748b; padding-bottom: 0;">Photo (Optional)</th>
+                  <th style="width: 40px; padding-bottom: 0;"></th>
+                </tr>
+              </thead>
+              <tbody id="variants-table-body">
+                <!-- Dynamically populated variant rows -->
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <!-- Fallback URL -->

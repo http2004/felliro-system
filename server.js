@@ -36,8 +36,15 @@ app.use(express.urlencoded({ extended: true }));
 
 const publicPath = path.resolve(__dirname, 'public');
 
-// Serve static frontend files
-app.use(express.static(publicPath));
+// Serve static frontend files with caching for assets
+app.use(express.static(publicPath, {
+  maxAge: '1d', // Cache for 1 day
+  setHeaders: (res, path) => {
+    if (path.includes('/uploads/') || path.includes('/images/')) {
+      res.setHeader('Cache-Control', 'public, max-age=86400'); // 1 day
+    }
+  }
+}));
 
 // API Routes
 app.use('/api/auth', authRoutes);
@@ -86,6 +93,14 @@ if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
       botService.initBot(io);
     } catch (err) {
       console.error('❌ WhatsApp Bot init error:', err.message);
+    }
+
+    // Start background cron jobs (Courier sync, etc.)
+    try {
+      const cronService = require('./services/cronService');
+      cronService.startCronJobs();
+    } catch (err) {
+      console.error('❌ Cron Service init error:', err.message);
     }
   });
 }

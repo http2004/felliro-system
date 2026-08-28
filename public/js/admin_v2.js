@@ -1608,10 +1608,28 @@ window.filterProductsTable = function() {
 };
 
 window.handlePhotoSelect = function(input) {
-  const fb = document.getElementById('upload-feedback');
-  if (fb && input.files && input.files.length > 0) {
-    fb.style.display = 'block';
-    fb.textContent = `✓ ${input.files.length} photo(s) selected: ` + Array.from(input.files).map(f => f.name).join(', ');
+  const previewContainer = document.getElementById('product-photo-previews');
+  if (!previewContainer) return;
+  previewContainer.innerHTML = ''; // Clear previous previews
+  
+  if (input.files && input.files.length > 0) {
+    Array.from(input.files).forEach(file => {
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = document.createElement('img');
+          img.src = e.target.result;
+          img.style.width = '80px';
+          img.style.height = '80px';
+          img.style.objectFit = 'cover';
+          img.style.borderRadius = '8px';
+          img.style.border = '2px solid var(--hz-brand)';
+          img.title = file.name;
+          previewContainer.appendChild(img);
+        };
+        reader.readAsDataURL(file);
+      }
+    });
   }
 };
 
@@ -3204,16 +3222,35 @@ function addVariantRow(size = '', color = '', qty = 0, imageUrl = '') {
   const tbody = document.getElementById('variants-table-body');
   if (!tbody) return;
   const tr = document.createElement('tr');
+  tr.style.background = '#ffffff';
+  tr.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)';
+  
+  const fileInputId = 'var-file-' + Math.random().toString(36).substr(2, 9);
+  const previewId = 'var-preview-' + Math.random().toString(36).substr(2, 9);
+  
   tr.innerHTML = `
-    <td><input type="text" class="hz-variant-input var-size" value="${size}" placeholder="e.g. M"></td>
-    <td><input type="text" class="hz-variant-input var-color" value="${color}" placeholder="e.g. Red"></td>
-    <td><input type="number" class="hz-variant-input var-qty" value="${qty}" min="0"></td>
-    <td>
-      ${imageUrl ? `<img src="${imageUrl}" style="width:24px;height:24px;object-fit:cover;border-radius:4px;margin-bottom:4px;display:block;">` : ''}
-      <input type="file" class="var-image" accept="image/*" style="font-size:0.75rem; width: 100%;">
-      <input type="hidden" class="var-image-url" value="${imageUrl}">
+    <td style="padding: 8px 6px; border-radius: 8px 0 0 8px;"><input type="text" class="hz-form-input var-size" value="${size}" placeholder="e.g. M" style="padding: 6px 10px; font-size: 0.85rem; border-color: #cbd5e1;"></td>
+    <td style="padding: 8px 6px;"><input type="text" class="hz-form-input var-color" value="${color}" placeholder="e.g. Red" style="padding: 6px 10px; font-size: 0.85rem; border-color: #cbd5e1;"></td>
+    <td style="padding: 8px 6px;"><input type="number" class="hz-form-input var-qty" value="${qty}" min="0" style="padding: 6px 10px; font-size: 0.85rem; border-color: #cbd5e1;"></td>
+    <td style="padding: 8px 6px;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <img id="${previewId}" src="${imageUrl || '/images/placeholder.svg'}" style="width: 32px; height: 32px; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e1; cursor: pointer;" onclick="document.getElementById('${fileInputId}').click()" onerror="this.src='/images/placeholder.svg'">
+        <input type="file" id="${fileInputId}" class="var-image" accept="image/*" style="display: none;" onchange="
+          if(this.files && this.files[0]) {
+            const r = new FileReader();
+            r.onload = e => document.getElementById('${previewId}').src = e.target.result;
+            r.readAsDataURL(this.files[0]);
+          }
+        ">
+        <input type="hidden" class="var-image-url" value="${imageUrl}">
+        <span style="font-size: 0.75rem; color: var(--hz-brand); cursor: pointer; font-weight: 600;" onclick="document.getElementById('${fileInputId}').click()">Change</span>
+      </div>
     </td>
-    <td style="text-align: center;"><button type="button" class="hz-variant-del-btn" title="Remove variant" onclick="this.closest('tr').remove()"><svg style="width: 15px; height: 15px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></td>
+    <td style="padding: 8px 6px; text-align: center; border-radius: 0 8px 8px 0;">
+      <button type="button" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 4px;" title="Remove" onclick="this.closest('tr').remove()">
+        <svg style="width: 18px; height: 18px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      </button>
+    </td>
   `;
   tbody.appendChild(tr);
 }

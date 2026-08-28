@@ -5,7 +5,7 @@ try {
   console.log('--- Committing to Git ---');
   execSync('git add .', { stdio: 'inherit' });
   try {
-    execSync('git commit -m "Update WhatsApp Number to 94729985368"', { stdio: 'inherit' });
+    execSync('git commit -m "Update premium UI and automated courier sync background job"', { stdio: 'inherit' });
   } catch (e) {
     console.log('Nothing to commit or error committing.');
   }
@@ -36,4 +36,4 @@ conn.on('ready', () => {
 }).on('error', err => {
   console.error(err);
   process.exit(1);
-}).connect({ host: '198.44.123.14', port: 22, username: 'root', password: '47dL5vt55M0itPVwGQ', readyTimeout: 20000 });
+}).connect({ host: '198.44.123.14', port: 22, username: 'root', password: 'kSiUB158BIbg15sQ3l', readyTimeout: 20000 });

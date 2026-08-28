@@ -3,6 +3,7 @@ const router = express.Router();
 const productController = require('../controllers/productController');
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
 const upload = require('../middleware/upload');
+const optimizeImages = require('../middleware/imageOptimizer');
 
 // Public APIs
 router.get('/products', productController.getAllProducts);
@@ -10,8 +11,8 @@ router.get('/products/:id', productController.getProductById);
 
 // Admin APIs
 router.get('/admin/products', authenticateToken, authorizeRoles('admin', 'cashier'), productController.getAdminProducts);
-router.post('/admin/products', authenticateToken, authorizeRoles('admin'), upload.any(), productController.createProduct);
-router.put('/admin/products/:id', authenticateToken, authorizeRoles('admin'), upload.any(), productController.updateProduct);
+router.post('/admin/products', authenticateToken, authorizeRoles('admin'), upload.any(), optimizeImages, productController.createProduct);
+router.put('/admin/products/:id', authenticateToken, authorizeRoles('admin'), upload.any(), optimizeImages, productController.updateProduct);
 router.patch('/admin/products/:id/stock', authenticateToken, authorizeRoles('admin', 'cashier'), productController.updateStock);
 router.delete('/admin/products/:id', authenticateToken, authorizeRoles('admin'), productController.deleteProduct);
 

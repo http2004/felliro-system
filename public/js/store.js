@@ -200,7 +200,7 @@ function renderCartDrawer() {
     subtotal += itemTotal;
     return `
       <div class="cart-item">
-        <img src="${item.image}" alt="${item.name}" onerror="this.onerror=null; this.src='/images/placeholder.svg';">
+        <img src="${item.image}" alt="${item.name}" loading="lazy" onerror="this.onerror=null; this.src='/images/placeholder.svg';">
         <div class="cart-item-info">
           <div class="cart-item-title">${item.name}</div>
           <div class="cart-item-meta">${item.size} | ${item.color}</div>

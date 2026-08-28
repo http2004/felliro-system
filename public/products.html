@@ -277,7 +277,7 @@
           <div class="single-product product-card reveal active" style="transition-delay: ${(index % 12) * 50}ms" onclick="openProductQuickView(${p.id})">
             <div class="product-img-wrapper product-img-holder" style="position:relative;">
               ${badge}
-              <img src="${img}" alt="${p.name}" onerror="this.onerror=null; this.src='/images/placeholder.svg';">
+              <img src="${img}" alt="${p.name}" loading="lazy" onerror="this.onerror=null; this.src='/images/placeholder.svg';">
               <div class="hover-gradient"></div>
             </div>
             <div class="product-details">

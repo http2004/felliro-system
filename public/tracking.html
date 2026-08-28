@@ -8,6 +8,243 @@
   <link rel="icon" type="image/png" href="/images/favicon.png">
   <link rel="apple-touch-icon" href="/images/favicon.png">
   <link rel="stylesheet" href="/css/store.css?v=2026">
+  <style>
+    /* Premium Tracking Stepper Styles */
+    .tracking-stepper-container {
+      background: var(--bg-secondary);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+      backdrop-filter: blur(10px);
+      padding: 30px 20px !important;
+      border-radius: 20px !important;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    [data-theme='light'] .tracking-stepper-container {
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .tracking-stepper {
+      display: flex;
+      justify-content: space-between;
+      position: relative;
+      padding: 0 10px;
+      z-index: 2;
+    }
+    
+    .tracking-stepper::before {
+      content: '';
+      position: absolute;
+      top: 20px;
+      left: 30px;
+      right: 30px;
+      height: 6px;
+      background: var(--border);
+      z-index: 1;
+      border-radius: 4px;
+    }
+    
+    .stepper-progress {
+      position: absolute;
+      top: 20px;
+      left: 30px;
+      height: 6px;
+      background: linear-gradient(90deg, #F43F5E, #EC4899);
+      z-index: 2;
+      border-radius: 4px;
+      transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 0 15px rgba(244, 63, 94, 0.4);
+    }
+    
+    .stepper-step {
+      position: relative;
+      z-index: 3;
+      text-align: center;
+      width: 70px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .step-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: var(--bg-main);
+      border: 3px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+      font-size: 18px;
+      color: var(--text-muted);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    
+    .stepper-step.completed .step-icon {
+      background: linear-gradient(135deg, #10B981, #059669);
+      border-color: transparent;
+      color: white;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+    }
+    
+    .stepper-step.active .step-icon {
+      background: linear-gradient(135deg, #F43F5E, #E11D48);
+      border-color: transparent;
+      color: white;
+      animation: premium-pulse 2s infinite;
+      box-shadow: 0 4px 15px rgba(244, 63, 94, 0.4);
+    }
+    
+    @keyframes premium-pulse {
+      0% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.6); }
+      70% { box-shadow: 0 0 0 15px rgba(244, 63, 94, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0); }
+    }
+    
+    .step-label {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: color 0.3s;
+    }
+    
+    .stepper-step.completed .step-label {
+      color: #10B981;
+    }
+    
+    .stepper-step.active .step-label {
+      color: #F43F5E;
+    }
+
+    /* Premium Order Details Styles */
+    .premium-panel {
+      background: var(--bg-secondary);
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 25px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+      transition: transform 0.3s ease;
+    }
+    
+    [data-theme='light'] .premium-panel {
+      background: #FFFFFF;
+      border: 1px solid rgba(0,0,0,0.05);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.04);
+    }
+
+    .premium-panel:hover {
+      transform: translateY(-5px);
+    }
+    
+    .panel-title {
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 20px;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .trk-item-row {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 15px;
+      margin-bottom: 10px;
+      background: var(--bg-main);
+      border-radius: 12px;
+      border: 1px solid transparent;
+      transition: all 0.3s;
+    }
+    
+    .trk-item-row:hover {
+      border-color: var(--border);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+      transform: scale(1.01);
+    }
+    
+    .trk-item-img {
+      width: 60px;
+      height: 60px;
+      border-radius: 10px;
+      object-fit: cover;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    
+    .trk-item-details {
+      flex: 1;
+    }
+    
+    .trk-item-name {
+      font-weight: 800;
+      font-size: 15px;
+      color: var(--text-main);
+      margin-bottom: 4px;
+    }
+    
+    .trk-item-meta {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    
+    .trk-item-price {
+      font-weight: 800;
+      font-size: 16px;
+      color: var(--primary);
+      background: rgba(244, 63, 94, 0.1);
+      padding: 6px 12px;
+      border-radius: 8px;
+    }
+    
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      font-size: 15px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    
+    .summary-total {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 2px dashed var(--border);
+      font-size: 20px;
+      font-weight: 900;
+      color: var(--text-main);
+    }
+    
+    .summary-total span:last-child {
+      background: linear-gradient(90deg, #F43F5E, #EC4899);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .payment-badge {
+      margin-top: 20px;
+      font-size: 13px;
+      color: var(--text-main);
+      background: linear-gradient(135deg, rgba(244,63,94,0.1), rgba(236,72,153,0.1));
+      border: 1px solid rgba(244,63,94,0.2);
+      padding: 10px 15px;
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+    }
+  </style>
 </head>
 <body>
 
@@ -118,8 +355,37 @@
           </div>
         </div>
 
-        <div class="timeline" id="tracking-timeline">
-          <!-- Timeline items injected via JS -->
+        <div class="tracking-stepper-container" style="margin-bottom: 40px;">
+          <div class="tracking-stepper" id="tracking-stepper">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px;">
+          <!-- Order Details (Items & Summary) -->
+          <div class="premium-panel">
+            <h3 class="panel-title">
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--primary)"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg> 
+              Order Details
+            </h3>
+            <div id="tracking-items" style="margin-bottom: 25px;">
+              <!-- Items injected via JS -->
+            </div>
+            <div id="tracking-summary">
+              <!-- Summary injected via JS -->
+            </div>
+          </div>
+
+          <!-- Old Timeline (Detailed History) -->
+          <div class="premium-panel">
+            <h3 class="panel-title">
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--primary)"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              Detailed Status History
+            </h3>
+            <div class="timeline" id="tracking-timeline">
+              <!-- Timeline items injected via JS -->
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -180,15 +446,15 @@
         const statusColor = isDelivered ? '#01B574' : isInTransit ? '#4318FF' : '#F59E0B';
 
         courierWidget.innerHTML = `
-          <div style="background: linear-gradient(135deg, #111827 0%, #1F2937 100%); color: #FFFFFF; border-radius: 16px; padding: 22px 26px; box-shadow: 0 10px 25px rgba(0,0,0,0.15);">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; border-bottom: 1px solid rgba(255,255,255,0.12); padding-bottom: 15px; margin-bottom: 18px;">
+          <div style="background: var(--bg-secondary); color: var(--text-main); border: 1px solid var(--border); border-radius: 16px; padding: 22px 26px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 18px;">
               <div style="display: flex; align-items: center; gap: 12px;">
-                <div style="background: rgba(255,255,255,0.1); width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px;">
-                  🚚
+                <div style="background: var(--bg-main); width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--text-main); border: 1px solid var(--border);">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
                 </div>
                 <div>
-                  <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; color: #9CA3AF; font-weight: 600;">Official Delivery Partner</div>
-                  <div style="font-size: 17px; font-weight: 800; color: #FFFFFF; letter-spacing: -0.2px;">Fardar Express Domestic</div>
+                  <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-muted); font-weight: 600;">Official Delivery Partner</div>
+                  <div style="font-size: 17px; font-weight: 800; color: var(--text-main); letter-spacing: -0.2px;">Fardar Express Domestic</div>
                 </div>
               </div>
               <div>
@@ -199,29 +465,30 @@
             </div>
 
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 16px; margin-bottom: 18px;">
-              <div style="background: rgba(255,255,255,0.06); padding: 12px 16px; border-radius: 10px;">
-                <div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; font-weight: 600;">Barcode / Waybill</div>
-                <div style="font-size: 15px; font-weight: 800; color: #60A5FA; font-family: monospace; letter-spacing: 1px; margin-top: 3px;">
+              <div style="background: var(--bg-main); padding: 12px 16px; border-radius: 10px; border: 1px solid transparent;">
+                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Barcode / Waybill</div>
+                <div style="font-size: 15px; font-weight: 800; color: var(--primary); font-family: monospace; letter-spacing: 1px; margin-top: 3px;">
                   ${cTrk.trackingNumber || trkNo}
                 </div>
               </div>
-              <div style="background: rgba(255,255,255,0.06); padding: 12px 16px; border-radius: 10px;">
-                <div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; font-weight: 600;">Current Hub / Branch</div>
-                <div style="font-size: 15px; font-weight: 700; color: #F3F4F6; margin-top: 3px;">
-                  📍 ${cTrk.branch || 'Sorting Hub'}
+              <div style="background: var(--bg-main); padding: 12px 16px; border-radius: 10px; border: 1px solid transparent;">
+                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Current Hub / Branch</div>
+                <div style="font-size: 15px; font-weight: 700; color: var(--text-main); margin-top: 3px; display: flex; align-items: center; gap: 6px;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #F87171;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                  ${cTrk.branch || 'Sorting Hub'}
                 </div>
               </div>
               ${cTrk.lastUpdate ? `
-              <div style="background: rgba(255,255,255,0.06); padding: 12px 16px; border-radius: 10px;">
-                <div style="font-size: 11px; color: #9CA3AF; text-transform: uppercase; font-weight: 600;">Last Courier Update</div>
-                <div style="font-size: 13px; font-weight: 600; color: #E5E7EB; margin-top: 3px;">
+              <div style="background: var(--bg-main); padding: 12px 16px; border-radius: 10px; border: 1px solid transparent;">
+                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Last Courier Update</div>
+                <div style="font-size: 13px; font-weight: 600; color: var(--text-main); margin-top: 3px;">
                   ${cTrk.lastUpdate}
                 </div>
               </div>` : ''}
             </div>
 
             <div style="display: flex; justify-content: flex-end; align-items: center; gap: 12px; flex-wrap: wrap;">
-              <a href="https://www.fdedomestic.com/" target="_blank" rel="noopener noreferrer" style="color: #93C5FD; font-size: 13px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+              <a href="https://www.fdedomestic.com/" target="_blank" rel="noopener noreferrer" style="color: var(--primary); font-size: 13px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
                 Open Courier Portal ↗
               </a>
             </div>
@@ -230,14 +497,14 @@
         courierWidget.style.display = 'block';
       } else {
         courierWidget.innerHTML = `
-          <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 14px; padding: 18px 22px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px;">
+          <div style="background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 14px; padding: 18px 22px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
             <div style="display: flex; align-items: center; gap: 14px;">
-              <div style="background: #EFF6FF; color: #2563EB; width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px;">
-                📦
+              <div style="background: rgba(37, 99, 235, 0.1); color: #2563EB; width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
               </div>
               <div>
-                <div style="font-size: 14px; font-weight: 700; color: #1E293B;">Fardar Domestic Waybill: <span style="font-family: monospace; color: #2563EB;">${trkNo}</span></div>
-                <div style="font-size: 12px; color: #64748B; margin-top: 2px;">Barcode assigned. Real-time updates will appear once the parcel is scanned at the courier hub.</div>
+                <div style="font-size: 14px; font-weight: 700; color: var(--text-main);">Fardar Domestic Waybill: <span style="font-family: monospace; color: #2563EB;">${trkNo}</span></div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Barcode assigned. Real-time updates will appear once the parcel is scanned at the courier hub.</div>
               </div>
             </div>
             <a href="https://www.fdedomestic.com/" target="_blank" rel="noopener noreferrer" class="btn-secondary" style="font-size: 12px; padding: 8px 16px; border-radius: 6px; text-decoration: none;">
@@ -293,6 +560,90 @@
             }
           } else {
             if (courierWidget) courierWidget.style.display = 'none';
+          }
+
+          const itemsDiv = document.getElementById('tracking-items');
+          if (data.order.items && data.order.items.length > 0) {
+            itemsDiv.innerHTML = data.order.items.map(item => `
+              <div class="trk-item-row">
+                <img class="trk-item-img" src="${item.product_image || '/images/placeholder.svg'}" alt="${item.product_name}">
+                <div class="trk-item-details">
+                  <div class="trk-item-name">${item.product_name}</div>
+                  <div class="trk-item-meta">${item.size ? item.size + ' | ' : ''}${item.color || ''} (Qty: ${item.quantity})</div>
+                </div>
+                <div class="trk-item-price">Rs. ${(Number(item.total)).toLocaleString()}</div>
+              </div>
+            `).join('');
+          } else {
+            itemsDiv.innerHTML = '<div style="color:var(--text-muted); font-size: 13px;">No item details available.</div>';
+          }
+
+          const summaryDiv = document.getElementById('tracking-summary');
+          const subtotal = Number(data.order.total_amount) - Number(data.order.delivery_fee);
+          summaryDiv.innerHTML = `
+            <div class="summary-row">
+              <span>Subtotal</span><span>Rs. ${subtotal.toLocaleString()}</span>
+            </div>
+            <div class="summary-row">
+              <span>Delivery Fee</span><span>Rs. ${Number(data.order.delivery_fee).toLocaleString()}</span>
+            </div>
+            <div class="summary-total">
+              <span>Total</span><span>Rs. ${Number(data.order.total_amount).toLocaleString()}</span>
+            </div>
+            <div class="payment-badge">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+              Payment Method: ${data.order.payment_method.replace(/_/g, ' ')}
+            </div>
+          `;
+
+          const stepperContainer = document.querySelector('.tracking-stepper-container');
+          const stepper = document.getElementById('tracking-stepper');
+          
+          const statusMap = {
+            'pending': 0,
+            'processing': 1,
+            'handed_to_courier': 2,
+            'shipped': 2,
+            'out_for_delivery': 2,
+            'delivered': 3,
+            'completed': 3
+          };
+
+          const steps = ['Pending', 'Processing', 'Shipped', 'Delivered'];
+          const currentStatusRaw = data.order.order_status.toLowerCase();
+          const currentIndex = statusMap[currentStatusRaw];
+          
+          if (currentIndex === undefined) {
+            // e.g. cancelled, refunded, returned
+            stepperContainer.style.background = 'transparent';
+            stepperContainer.style.boxShadow = 'none';
+            stepperContainer.style.border = 'none';
+            stepperContainer.innerHTML = `<div style="color:var(--primary); font-size:18px; font-weight:800; width:100%; text-align:center; padding: 15px 0; border: 1px solid var(--border); border-radius: 15px; background: var(--bg-secondary);">Order Status: ${data.order.order_status.toUpperCase().replace(/_/g, ' ')}</div>`;
+          } else {
+            const progressPercent = (currentIndex / (steps.length - 1)) * 100;
+            let stepperHtml = `<div class="stepper-progress" style="width: ${progressPercent}%;"></div>`;
+            
+            const stepIcons = [
+              '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>',
+              '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>',
+              '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>',
+              '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>'
+            ];
+            const checkIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+            
+            steps.forEach((step, index) => {
+              let stateClass = '';
+              if (index < currentIndex) stateClass = 'completed';
+              else if (index === currentIndex) stateClass = 'active';
+              
+              stepperHtml += `
+                <div class="stepper-step ${stateClass}">
+                  <div class="step-icon">${index < currentIndex ? checkIcon : stepIcons[index]}</div>
+                  <div class="step-label">${step}</div>
+                </div>
+              `;
+            });
+            stepper.innerHTML = stepperHtml;
           }
 
           if (!data.order.history || data.order.history.length === 0) {
